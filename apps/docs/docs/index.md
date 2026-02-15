@@ -2,8 +2,8 @@
 layout: home
 
 hero:
-  name: "Puzzlebox"
-  text: "Agent-First Game Backend for Newsrooms"
+  name: ""
+  text: ""
   tagline: "Ship daily-play games with scheduling, validation, streaks, share cards, and analytics from one API platform."
   actions:
     - theme: brand
@@ -21,21 +21,6 @@ features:
   - title: Built for Newsroom Operations
     details: Supports editorial publish flows, Google Sheets ingestion, and analytics that tie to retention narratives.
 ---
-
-## Puzzlebox Mark
-
-<div class="logo-block">
-<pre>
- ███████████                                   ████           ███████████                      
-░░███░░░░░███                                 ░░███          ░░███░░░░░███                     
- ░███    ░███ █████ ████  █████████  █████████ ░███   ██████  ░███    ░███  ██████  █████ █████
- ░██████████ ░░███ ░███  ░█░░░░███  ░█░░░░███  ░███  ███░░███ ░██████████  ███░░███░░███ ░░███ 
- ░███░░░░░░   ░███ ░███  ░   ███░   ░   ███░   ░███ ░███████  ░███░░░░░███░███ ░███ ░░░█████░  
- ░███         ░███ ░███    ███░   █   ███░   █ ░███ ░███░░░   ░███    ░███░███ ░███  ███░░░███ 
- █████        ░░████████  █████████  █████████ █████░░██████  ███████████ ░░██████  █████ █████
-░░░░░          ░░░░░░░░  ░░░░░░░░░  ░░░░░░░░░ ░░░░░  ░░░░░░  ░░░░░░░░░░░   ░░░░░░  ░░░░░ ░░░░░ 
-</pre>
-</div>
 
 <div class="marketing-grid">
   <div class="marketing-card">

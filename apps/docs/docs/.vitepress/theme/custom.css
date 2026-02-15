@@ -10,6 +10,20 @@
   letter-spacing: -0.02em;
 }
 
+.VPHero .name,
+.VPHero .text {
+  display: none;
+}
+
+.hero-mark-wrap {
+  margin-bottom: 10px;
+}
+
+.hero-mark {
+  font-size: 0.46rem;
+  margin: 0;
+}
+
 .logo-block {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-size: 0.48rem;

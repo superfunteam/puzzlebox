@@ -191,4 +191,10 @@
 | 2026-02-15T04:04:45Z | agent-gameplay | TASK_DONE | DOCS-GAMEPLAY-001 | gameplay docs complete |
 | 2026-02-15T04:04:45Z | agent-analytics | TASK_DONE | DOCS-ANALYTICS-001 | analytics docs complete |
 | 2026-02-15T04:04:45Z | agent-sdk-web-tools | TASK_DONE | DOCS-SDKWEB-001 | sdk/sheets docs complete |
+| 2026-02-15T04:13:46Z | agent-platform | TASK_START | DOCS-HERO-001 | move Puzzlebox Mark into hero and remove duplicate homepage section |
+| 2026-02-15T04:13:46Z | agent-platform | FILE_EDIT | DOCS-HERO-001 | inject hero mark via VitePress home hero slot |
+| 2026-02-15T04:13:46Z | agent-platform | FILE_EDIT | DOCS-HERO-001 | remove standalone Puzzlebox Mark section and clear hero title text |
+| 2026-02-15T04:13:46Z | agent-platform | FILE_EDIT | DOCS-HERO-001 | hide default hero text and style hero mark block |
+| 2026-02-15T04:13:46Z | agent-platform | FILE_EDIT | DOCS-HERO-001 | ignore vitepress cache artifacts |
+| 2026-02-15T04:13:46Z | orchestrator | TEST_RUN | DOCS-HERO-001 |  |
 | 2026-02-15T20:30:00Z | orchestrator | TASK_START | P0-BOOT-001 | bootstrap monorepo scaffold and CI |
