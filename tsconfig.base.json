@@ -10,12 +10,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "baseUrl": ".",
-    "paths": {
-      "@puzzlebox/shared": ["packages/shared/src/index.ts"],
-      "@puzzlebox/db": ["packages/db/src/index.ts"],
-      "@puzzlebox/sdk": ["packages/sdk/src/index.ts"]
-    }
+    "exactOptionalPropertyTypes": true
   }
 }

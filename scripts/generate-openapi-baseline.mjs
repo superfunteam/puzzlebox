@@ -9,5 +9,5 @@ const baseline = {
   paths: {}
 };
 
-writeFileSync(new URL('../openapi.baseline.json', import.meta.url), JSON.stringify(baseline, null, 2));
+writeFileSync(new URL('../openapi.baseline.json', import.meta.url), `${JSON.stringify(baseline, null, 2)}\n`);
 console.log('openapi.baseline.json updated');

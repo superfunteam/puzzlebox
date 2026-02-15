@@ -8,8 +8,8 @@ const roundPayloadSchema = z.object({
   position: z.number().int().min(1),
   prompt: z.string(),
   options: z.array(optionSchema).min(2),
-  correct_answer: z.record(z.unknown()).nullable(),
-  metadata: z.record(z.unknown()).nullable().optional()
+  correct_answer: z.record(z.string(), z.unknown()).nullable(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional()
 });
 
 export function registerEditionsRoutes(app: OpenAPIHono<any>) {
@@ -26,7 +26,7 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
                 edition_date: z.string(),
                 status: z.enum(['draft', 'scheduled', 'active', 'archived']),
                 publish_at: z.string().nullable().optional(),
-                metadata: z.record(z.unknown()).nullable().optional(),
+                metadata: z.record(z.string(), z.unknown()).nullable().optional(),
                 rounds: z.array(roundPayloadSchema)
               })
             }
@@ -101,7 +101,7 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
               schema: z.object({
                 status: z.enum(['draft', 'scheduled', 'active', 'archived']).optional(),
                 publish_at: z.string().nullable().optional(),
-                metadata: z.record(z.unknown()).nullable().optional()
+                metadata: z.record(z.string(), z.unknown()).nullable().optional()
               })
             }
           }
@@ -192,8 +192,8 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
               schema: z.object({
                 prompt: z.string().optional(),
                 options: z.array(optionSchema).optional(),
-                correct_answer: z.record(z.unknown()).nullable().optional(),
-                metadata: z.record(z.unknown()).nullable().optional()
+                correct_answer: z.record(z.string(), z.unknown()).nullable().optional(),
+                metadata: z.record(z.string(), z.unknown()).nullable().optional()
               })
             }
           }

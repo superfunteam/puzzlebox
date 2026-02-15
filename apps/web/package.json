@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json && vite build",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -b tsconfig.json --pretty false",
     "test": "vitest run",
     "lint": "echo 'lint skipped for @puzzlebox/web'"
   },

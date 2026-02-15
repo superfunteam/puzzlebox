@@ -100,11 +100,12 @@ export const gamesHandlers = {
     const slug = c.req.param('slug');
     const body = c.req.valid('json');
 
-    const game = store.patchGame(tenant.id, slug, {
-      name: body.name,
-      active: body.active,
-      config: body.config ? parseGameConfig(body.config) : undefined
-    });
+    const patch: Partial<{ name: string; active: boolean; config: GameConfig }> = {};
+    if (body.name !== undefined) patch.name = body.name;
+    if (body.active !== undefined) patch.active = body.active;
+    if (body.config !== undefined) patch.config = parseGameConfig(body.config);
+
+    const game = store.patchGame(tenant.id, slug, patch);
 
     if (!game) return c.json({ error: 'not_found' }, 404);
     return c.json(gameToResponse(game));

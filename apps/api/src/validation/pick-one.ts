@@ -8,7 +8,7 @@ export function validatePickOne(round: Round, answer: Record<string, unknown>) {
     throw new Error('missing_correct_answer');
   }
 
-  const optionExists = round.options.some((option) => option.key === key);
+  const optionExists = round.options.some((option: { key: string }) => option.key === key);
   if (!optionExists) {
     throw new Error('invalid_option');
   }

@@ -3,8 +3,8 @@ import type { PuzzleboxClientConfig, RequestOptions } from './types';
 export class PuzzleboxClient {
   private readonly baseUrl: string;
   private readonly tenant: string;
-  private jwt?: string;
-  private apiKey?: string;
+  private jwt: string | undefined;
+  private apiKey: string | undefined;
 
   constructor(config: PuzzleboxClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, '');

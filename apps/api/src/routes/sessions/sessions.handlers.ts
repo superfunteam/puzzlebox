@@ -106,12 +106,12 @@ export const sessionsHandlers = {
       for (const option of round.options) counts[option.key] = 0;
       for (const response of allRoundResponses) {
         const answerKey = String(response.answer.key ?? '');
-        if (answerKey in counts) counts[answerKey] += 1;
+        if (answerKey in counts) counts[answerKey] = (counts[answerKey] ?? 0) + 1;
       }
       const total = allRoundResponses.length;
 
       const distribution = Object.fromEntries(
-        round.options.map((option) => [
+        round.options.map((option: { key: string; label: string }) => [
           option.key,
           {
             label: option.label,

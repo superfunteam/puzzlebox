@@ -9,8 +9,8 @@
     "tools/*"
   ],
   "scripts": {
-    "build": "npm run -ws build",
-    "typecheck": "npm run -ws typecheck",
+    "build": "npm run build -w @puzzlebox/shared && npm run build -w @puzzlebox/sdk && npm run build -w @puzzlebox/db && npm run build -w @puzzlebox/api && npm run build -w @puzzlebox/web && npm run build -w @puzzlebox/sheets-sync",
+    "typecheck": "npm run typecheck -w @puzzlebox/shared && npm run typecheck -w @puzzlebox/sdk && npm run typecheck -w @puzzlebox/db && npm run typecheck -w @puzzlebox/api && npm run typecheck -w @puzzlebox/web && npm run typecheck -w @puzzlebox/sheets-sync",
     "test": "npm run -ws test",
     "lint": "npm run -ws lint",
     "openapi:baseline": "node scripts/generate-openapi-baseline.mjs",

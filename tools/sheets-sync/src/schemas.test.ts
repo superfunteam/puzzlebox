@@ -14,7 +14,7 @@ describe('sheets transform', () => {
       }
     ]);
 
-    expect(payload.rounds[0].correct_answer).toEqual({ key: 'a' });
+    expect(payload.rounds[0]?.correct_answer).toEqual({ key: 'a' });
   });
 
   it('transforms ordered rows', () => {
@@ -32,7 +32,7 @@ describe('sheets transform', () => {
       }
     ]);
 
-    expect(payload.rounds[0].correct_answer).toEqual({ order: ['a', 'b', 'c'] });
+    expect(payload.rounds[0]?.correct_answer).toEqual({ order: ['a', 'b', 'c'] });
   });
 
   it('transforms survey rows', () => {
@@ -46,6 +46,6 @@ describe('sheets transform', () => {
       }
     ]);
 
-    expect(payload.rounds[0].correct_answer).toBeNull();
+    expect(payload.rounds[0]?.correct_answer).toBeNull();
   });
 });

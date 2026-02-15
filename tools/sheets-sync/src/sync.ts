@@ -23,6 +23,18 @@ function readRows(filePath: string): Array<Record<string, string>> {
   return JSON.parse(raw) as Array<Record<string, string>>;
 }
 
+function asPickOneRows(rows: Array<Record<string, string>>): PickOneRow[] {
+  return rows as unknown as PickOneRow[];
+}
+
+function asOrderedRows(rows: Array<Record<string, string>>): OrderedRow[] {
+  return rows as unknown as OrderedRow[];
+}
+
+function asSurveyRows(rows: Array<Record<string, string>>): SurveyRow[] {
+  return rows as unknown as SurveyRow[];
+}
+
 async function main() {
   const [baseUrl, tenant, apiKey, slug, mode, rowsFile] = process.argv.slice(2);
 
@@ -50,11 +62,11 @@ async function main() {
 
   let payload: Record<string, unknown>;
   if (config.mode === 'pick_one') {
-    payload = pickOneRowsToEditionPayload(rows as PickOneRow[]);
+    payload = pickOneRowsToEditionPayload(asPickOneRows(rows));
   } else if (config.mode === 'ordered_sequence') {
-    payload = orderedRowsToEditionPayload(rows as OrderedRow[]);
+    payload = orderedRowsToEditionPayload(asOrderedRows(rows));
   } else {
-    payload = surveyRowsToEditionPayload(rows as SurveyRow[]);
+    payload = surveyRowsToEditionPayload(asSurveyRows(rows));
   }
 
   const result = await client.createEdition(config.slug, payload);

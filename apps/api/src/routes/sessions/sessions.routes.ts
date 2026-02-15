@@ -73,7 +73,7 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
             'application/json': {
               schema: z.object({
                 round_id: z.string().uuid(),
-                answer: z.record(z.unknown())
+                answer: z.record(z.string(), z.unknown())
               })
             }
           }

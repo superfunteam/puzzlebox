@@ -36,8 +36,9 @@ export interface SurveyRow {
 }
 
 export function pickOneRowsToEditionPayload(rows: PickOneRow[]) {
-  if (rows.length === 0) throw new Error('no_rows');
-  const editionDate = rows[0].edition_date;
+  const firstRow = rows.at(0);
+  if (!firstRow) throw new Error('no_rows');
+  const editionDate = firstRow.edition_date;
 
   return {
     edition_date: editionDate,
@@ -66,8 +67,9 @@ export function pickOneRowsToEditionPayload(rows: PickOneRow[]) {
 }
 
 export function orderedRowsToEditionPayload(rows: OrderedRow[]) {
-  if (rows.length === 0) throw new Error('no_rows');
-  const editionDate = rows[0].edition_date;
+  const firstRow = rows.at(0);
+  if (!firstRow) throw new Error('no_rows');
+  const editionDate = firstRow.edition_date;
 
   return {
     edition_date: editionDate,
@@ -100,8 +102,9 @@ export function orderedRowsToEditionPayload(rows: OrderedRow[]) {
 }
 
 export function surveyRowsToEditionPayload(rows: SurveyRow[]) {
-  if (rows.length === 0) throw new Error('no_rows');
-  const editionDate = rows[0].edition_date;
+  const firstRow = rows.at(0);
+  if (!firstRow) throw new Error('no_rows');
+  const editionDate = firstRow.edition_date;
 
   return {
     edition_date: editionDate,
