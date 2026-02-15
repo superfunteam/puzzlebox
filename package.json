@@ -1,0 +1,27 @@
+{
+  "name": "puzzlebox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent-first backend framework for daily-play games",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "build": "npm run -ws build",
+    "typecheck": "npm run -ws typecheck",
+    "test": "npm run -ws test",
+    "lint": "npm run -ws lint",
+    "openapi:baseline": "node scripts/generate-openapi-baseline.mjs",
+    "timeline:render": "node scripts/render-master-log-timeline.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@puzzlebox/sheets-sync",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "echo 'lint skipped for @puzzlebox/sheets-sync'",
+    "sync": "tsx src/sync.ts"
+  },
+  "dependencies": {
+    "@puzzlebox/sdk": "0.1.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

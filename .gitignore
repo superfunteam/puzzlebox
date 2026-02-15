@@ -1,0 +1,12 @@
+node_modules
+.env
+.env.*
+!.env.example
+dist
+coverage
+.nyc_output
+.tmp
+.DS_Store
+npm-debug.log*
+*.tsbuildinfo
+.worktrees/

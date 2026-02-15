@@ -1,0 +1,30 @@
+{
+  "name": "@puzzlebox/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "echo 'lint skipped for @puzzlebox/api'",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@hono/zod-openapi": "^0.17.2",
+    "@puzzlebox/shared": "0.1.0",
+    "@scalar/hono-api-reference": "^0.5.161",
+    "date-fns-tz": "^3.2.0",
+    "hono": "^4.6.12",
+    "hono-rate-limiter": "^0.4.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

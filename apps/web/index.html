@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Puzzlebox Who Says?</title>
+    <style>
+      :root {
+        --bg: radial-gradient(circle at 15% 15%, #f8f2d8, #f3d8a3 35%, #dfe8ff 100%);
+        --ink: #17202a;
+        --accent: #bf3f3f;
+        --card: rgba(255, 255, 255, 0.82);
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      #root {
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
