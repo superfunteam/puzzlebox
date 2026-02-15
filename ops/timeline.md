@@ -152,4 +152,43 @@
 | 2026-02-15T03:56:40Z | agent-gameplay | TASK_DONE | P1-GAME-002 | route schema and strict typing fixes complete |
 | 2026-02-15T03:56:40Z | agent-sdk-web-tools | TASK_DONE | P2-SDKWEB-002 | sdk and sync typing fixes complete |
 | 2026-02-15T03:56:40Z | orchestrator | MERGE | MERGE-ORCH-002 | integrated post-access verification and fixes |
+| 2026-02-15T04:04:45Z | orchestrator | TASK_START | DOCS-SWARM-001 | spawned multi-worktree swarm to build complete docs site |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-analytics | FILE_EDIT | DOCS-ANALYTICS-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-db-auth | FILE_EDIT | DOCS-DBAUTH-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-gameplay | FILE_EDIT | DOCS-GAMEPLAY-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-db-auth | FILE_EDIT | DOCS-DBAUTH-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-gameplay | FILE_EDIT | DOCS-GAMEPLAY-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-db-auth | FILE_EDIT | DOCS-DBAUTH-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-db-auth | FILE_EDIT | DOCS-DBAUTH-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-gameplay | FILE_EDIT | DOCS-GAMEPLAY-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-sdk-web-tools | FILE_EDIT | DOCS-SDKWEB-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-sdk-web-tools | FILE_EDIT | DOCS-SDKWEB-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | agent-platform | FILE_EDIT | DOCS-PLATFORM-001 | documentation site build-out |
+| 2026-02-15T04:04:45Z | orchestrator | MERGE | DOCS-SWARM-001 | merged docs platform scaffold |
+| 2026-02-15T04:04:45Z | orchestrator | MERGE | DOCS-SWARM-001 | merged auth/player docs |
+| 2026-02-15T04:04:45Z | orchestrator | MERGE | DOCS-SWARM-001 | merged gameplay docs |
+| 2026-02-15T04:04:45Z | orchestrator | MERGE | DOCS-SWARM-001 | merged analytics docs |
+| 2026-02-15T04:04:45Z | orchestrator | MERGE | DOCS-SWARM-001 | merged sdk/tooling docs |
+| 2026-02-15T04:04:45Z | orchestrator | TEST_RUN | DOCS-QA-001 |  |
+| 2026-02-15T04:04:45Z | orchestrator | TEST_RUN | DOCS-QA-001 |  |
+| 2026-02-15T04:04:45Z | orchestrator | TEST_RUN | DOCS-QA-001 |  |
+| 2026-02-15T04:04:45Z | orchestrator | TEST_RUN | DOCS-QA-001 |  |
+| 2026-02-15T04:04:45Z | orchestrator | TEST_RUN | DOCS-QA-001 |  |
+| 2026-02-15T04:04:45Z | orchestrator | TEST_RUN | DOCS-QA-001 |  |
+| 2026-02-15T04:04:45Z | agent-platform | TASK_DONE | DOCS-PLATFORM-001 | docs site scaffold complete |
+| 2026-02-15T04:04:45Z | agent-db-auth | TASK_DONE | DOCS-DBAUTH-001 | auth/players/error docs complete |
+| 2026-02-15T04:04:45Z | agent-gameplay | TASK_DONE | DOCS-GAMEPLAY-001 | gameplay docs complete |
+| 2026-02-15T04:04:45Z | agent-analytics | TASK_DONE | DOCS-ANALYTICS-001 | analytics docs complete |
+| 2026-02-15T04:04:45Z | agent-sdk-web-tools | TASK_DONE | DOCS-SDKWEB-001 | sdk/sheets docs complete |
 | 2026-02-15T20:30:00Z | orchestrator | TASK_START | P0-BOOT-001 | bootstrap monorepo scaffold and CI |
