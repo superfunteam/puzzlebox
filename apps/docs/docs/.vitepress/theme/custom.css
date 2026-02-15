@@ -1,0 +1,42 @@
+:root {
+  --vp-c-brand-1: #ae2f24;
+  --vp-c-brand-2: #7c1f17;
+  --vp-c-brand-3: #d34735;
+  --vp-home-hero-name-color: #111827;
+  --vp-home-hero-image-background-image: linear-gradient(120deg, #f6f2d9 0%, #f4d6ad 50%, #dce6ff 100%);
+}
+
+.VPHero .name {
+  letter-spacing: -0.02em;
+}
+
+.logo-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.48rem;
+  line-height: 1.15;
+  overflow-x: auto;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  color: #f8fafc;
+  padding: 16px;
+}
+
+.marketing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.marketing-card {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.endpoint-table th,
+.endpoint-table td {
+  white-space: nowrap;
+}

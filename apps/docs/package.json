@@ -1,0 +1,17 @@
+{
+  "name": "@puzzlebox/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs",
+    "typecheck": "echo 'typecheck skipped for @puzzlebox/docs'",
+    "test": "echo 'test skipped for @puzzlebox/docs'",
+    "lint": "echo 'lint skipped for @puzzlebox/docs'"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}
