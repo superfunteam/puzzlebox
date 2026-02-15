@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Puzzlebox logo">
+  <rect width="64" height="64" rx="12" fill="#17202A"/>
+  <path d="M14 18h24a12 12 0 1 1 0 24H30v10h-8V18Zm8 8v8h16a4 4 0 1 0 0-8H22Z" fill="#F4D6AD"/>
+  <circle cx="49" cy="49" r="7" fill="#AE2F24"/>
+</svg>
