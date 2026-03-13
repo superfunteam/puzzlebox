@@ -1,6 +1,9 @@
 [build]
-command = "npm run build -w @puzzlebox/web"
-publish = "apps/web/dist"
+command = "npm run docs:build"
+publish = "apps/docs/docs/.vitepress/dist"
 
 [build.environment]
 NODE_VERSION = "22"
+
+[build.processing.html]
+pretty_urls = true
