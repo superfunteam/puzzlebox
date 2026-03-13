@@ -60,6 +60,52 @@
   box-shadow: 0 10px 24px rgba(16, 33, 53, 0.14);
 }
 
+.VPSwitchAppearance {
+  display: none !important;
+}
+
+.audience-switcher-wrap {
+  border: 1px solid var(--lp-border);
+  border-radius: 16px;
+  padding: 14px;
+  background: var(--lp-surface-strong);
+  margin: 4px 0 20px;
+}
+
+.audience-switcher {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(13, 33, 58, 0.08);
+}
+
+.audience-switch-btn {
+  border: 0;
+  background: transparent;
+  color: #2b425f;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+}
+
+.audience-switch-btn.is-active {
+  background: linear-gradient(135deg, #1f6ba5, #0f8778);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.audience-switch-note {
+  margin: 10px 0 0;
+  color: var(--lp-subtle);
+  font-size: 0.92rem;
+}
+
 .lp-signal-strip {
   display: flex;
   flex-wrap: wrap;
@@ -180,6 +226,133 @@
   color: var(--lp-subtle);
 }
 
+.lp-sample-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.lp-code-panel {
+  border: 1px solid var(--lp-border);
+  border-radius: 16px;
+  padding: 16px;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.95), rgba(246, 250, 255, 0.82)),
+    var(--lp-surface);
+  box-shadow: 0 14px 34px rgba(16, 33, 53, 0.08);
+}
+
+.lp-code-panel h3 {
+  margin: 8px 0 8px;
+  color: var(--lp-text);
+}
+
+.lp-code-lead {
+  margin: 0;
+  color: var(--lp-subtle);
+}
+
+.lp-code-panel pre {
+  margin: 12px 0 0;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 33, 53, 0.16);
+  background: #0f2034;
+  color: #d6e4f5;
+  overflow-x: auto;
+}
+
+.lp-code-panel code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.79rem;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.lp-callout {
+  border: 1px solid var(--lp-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: var(--lp-surface);
+}
+
+.lp-callout h2 {
+  margin: 0 0 10px;
+  color: var(--lp-text);
+}
+
+.lp-callout ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #304a68;
+}
+
+.lp-callout li + li {
+  margin-top: 6px;
+}
+
+.lp-resource-section,
+.lp-mode-section {
+  margin-bottom: 24px;
+}
+
+.lp-section-intro {
+  margin: 0 0 12px;
+  color: var(--lp-subtle);
+}
+
+.resource-grid,
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.resource-card,
+.mode-card {
+  display: block;
+  text-decoration: none;
+  border: 1px solid var(--lp-border);
+  border-radius: 14px;
+  background: var(--lp-surface);
+  padding: 14px;
+  color: inherit;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.resource-card:hover,
+.mode-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(16, 33, 53, 0.1);
+}
+
+.resource-card h3,
+.mode-card h3 {
+  margin: 6px 0 8px;
+  color: var(--lp-text);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.resource-card p,
+.mode-card p {
+  margin: 0;
+  color: var(--lp-subtle);
+}
+
+.mode-card .lp-eyebrow {
+  color: var(--lp-accent);
+}
+
+.audience-switch-btn:focus-visible,
+.resource-card:focus-visible {
+  outline: 2px solid #0f8778;
+  outline-offset: 2px;
+}
+
 .VPHome .vp-doc div[class*='language-'] {
   border: 1px solid rgba(16, 33, 53, 0.16);
   border-radius: 14px;
@@ -237,8 +410,13 @@
   font-size: 0.88rem;
 }
 
+.audience-switcher-wrap,
 .lp-panel,
 .lp-loop-step,
+.lp-code-panel,
+.lp-callout,
+.resource-card,
+.mode-card,
 .lp-signal-strip span {
   opacity: 0;
   animation: lp-fade-up 0.58s ease forwards;
@@ -264,6 +442,10 @@
   animation-delay: 0.28s;
 }
 
+.lp-code-panel {
+  animation-delay: 0.18s;
+}
+
 @keyframes lp-fade-up {
   from {
     transform: translateY(8px);
@@ -278,6 +460,8 @@
 
 @media (max-width: 960px) {
   .lp-top-grid,
+  .resource-grid,
+  .mode-grid,
   .footer-grid {
     grid-template-columns: 1fr;
   }
@@ -289,8 +473,13 @@
 
 @media (prefers-reduced-motion: reduce) {
   .VPHero .action,
+  .audience-switch-btn,
   .lp-loop-step,
   .lp-panel,
+  .lp-code-panel,
+  .lp-callout,
+  .resource-card,
+  .mode-card,
   .lp-signal-strip span {
     transition: none;
     animation: none;
