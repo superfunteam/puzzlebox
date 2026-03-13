@@ -1,195 +1,129 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
+import { audience } from '../composables/useAudience';
+import HeroMarkTyping from './HeroMarkTyping.vue';
 
-type Audience = 'human' | 'agent';
-
-interface TopPanel {
-  eyebrow: string;
-  title: string;
-  body: string;
-  bullets: string[];
-}
-
-interface LoopStep {
-  title: string;
-  body: string;
-}
-
-interface ModeCard {
-  mode: string;
-  title: string;
-  details: string;
-}
-
-interface AudienceCopy {
-  intro: string;
-  signalPills: string[];
-  panels: [TopPanel, TopPanel];
+interface ContentCopy {
+  headline: string;
+  subheadline: string;
+  primaryCta: { text: string; href: string };
+  secondaryCta: { text: string; href: string };
+  signals: string[];
+  panels: Array<{
+    eyebrow: string;
+    title: string;
+    body: string;
+    bullets: string[];
+  }>;
   loopTitle: string;
-  loopSteps: LoopStep[];
-  sampleEyebrow: string;
-  sampleTitle: string;
-  sampleLead: string;
-  sampleSnippet: string;
-  guardrailsTitle: string;
-  guardrails: string[];
-  docsTitle: string;
-  docsIntro: string;
-  modesTitle: string;
-  modesIntro: string;
-  modeCards: ModeCard[];
-  footerSummary: string;
+  steps: Array<{ title: string; body: string }>;
+  codeEyebrow: string;
+  codeTitle: string;
+  codeLead: string;
+  codeSnippet: string;
+  footerLine: string;
 }
 
-const audience = ref<Audience>('human');
-
-const audienceCopy: Record<Audience, AudienceCopy> = {
+const content: Record<'human' | 'agent', ContentCopy> = {
   human: {
-    intro: 'Human view uses plain language for product, editorial, and business stakeholders.',
-    signalPills: [
+    headline: 'Ship daily-play games with scheduling, streaks, and analytics\u2009\u2014\u2009from one platform.',
+    subheadline: 'Puzzlebox handles the repeatable infrastructure so your team can focus on great content, clear UX, and measurable outcomes.',
+    primaryCta: { text: '5-Minute Quickstart', href: '/quickstart' },
+    secondaryCta: { text: 'Explore the API', href: '/api/overview' },
+    signals: [
       'Plain-language walkthrough',
-      'No backend jargon required',
-      'Built-in sharing and analytics',
-      'Storage options: memory or Postgres'
+      'No backend jargon',
+      'Built-in sharing & analytics',
+      'Memory or Postgres storage'
     ],
     panels: [
       {
         eyebrow: 'What it gives your team',
         title: 'Publish daily games without rebuilding core tech every time.',
-        body: 'Puzzlebox handles the repeatable infrastructure so teams can focus on great prompts, clear UX, and measurable outcomes.',
+        body: 'Your editors publish rounds. Puzzlebox handles scoring, progress tracking, and share-ready data at completion.',
         bullets: [
-          'Your editors publish rounds; Puzzlebox handles scoring and progress tracking.',
-          'Players can leave and return without losing their place.',
-          'Share text and streak data are ready at completion.',
-          'The same API works for fast prototypes and durable production setups.'
+          'Players leave and return without losing progress.',
+          'Share text and streak data ready at completion.',
+          'Same API for fast prototypes and production.',
+          'Daily and per-game analytics already modeled.'
         ]
       },
       {
         eyebrow: 'Why leaders care',
-        title: 'It turns gameplay into usable signals right away.',
-        body: 'You get consistent reporting surfaces from first launch through scale, so product and content teams can iterate using real player behavior.',
+        title: 'Gameplay turns into usable signals immediately.',
+        body: 'Consistent reporting from first launch through scale. Product and content teams iterate on real player behavior.',
         bullets: [
-          'Daily and per-game analytics are already modeled.',
-          'Round-level performance shows where players get stuck.',
-          'Validation lives on the server, so metrics stay trustworthy.',
-          'Documentation stays aligned with actual runtime behavior.'
+          'Round-level data shows where players get stuck.',
+          'Server-side validation keeps metrics trustworthy.',
+          'Docs stay aligned with runtime behavior.',
+          'No custom analytics pipelines to maintain.'
         ]
       }
     ],
-    loopTitle: 'How the day-to-day game loop works',
-    loopSteps: [
-      {
-        title: 'Pick a game format',
-        body: 'Choose multiple choice, ordering, or survey-style rounds.'
-      },
-      {
-        title: "Load today's playable edition",
-        body: "Your app asks for today's game and gets all the round data it needs."
-      },
-      {
-        title: 'Save progress naturally',
-        body: 'If someone already started, Puzzlebox resumes their session instead of creating confusion.'
-      },
-      {
-        title: 'Finish, share, and measure',
-        body: 'Completion returns share-ready text plus structured data for reporting.'
-      }
+    loopTitle: 'The daily game loop',
+    steps: [
+      { title: 'Pick a format', body: 'Multiple choice, ordering, or survey-style rounds.' },
+      { title: "Load today\u2019s edition", body: "Your app asks for today\u2019s game and gets all the round data it needs." },
+      { title: 'Resume or start', body: 'If someone already started, Puzzlebox resumes their session automatically.' },
+      { title: 'Finish & measure', body: 'Completion returns share-ready text plus structured data for reporting.' }
     ],
-    sampleEyebrow: 'Simple walkthrough',
-    sampleTitle: 'What one session feels like',
-    sampleLead: 'This mirrors the real flow, without technical syntax.',
-    sampleSnippet: String.raw`1. Ask Puzzlebox for today's edition.
-2. If the player already started, reopen their existing session.
-3. If they have not started, begin a new session.
-4. Submit each answer and let Puzzlebox validate it.
+    codeEyebrow: 'Simple walkthrough',
+    codeTitle: 'What one session looks like',
+    codeLead: 'The real flow, without technical syntax.',
+    codeSnippet: `1. Ask Puzzlebox for today\u2019s edition.
+2. If the player already started, reopen their session.
+3. If not, begin a new session.
+4. Submit each answer \u2014 Puzzlebox validates it.
 5. Complete the session to get score, streak, and share copy.
 6. Use analytics endpoints to track what happened.`,
-    guardrailsTitle: 'What always stays consistent',
-    guardrails: [
-      'Every request is scoped to a tenant, so data stays separated.',
-      'Admin and gameplay access are intentionally separated for safety.',
-      'Session start is idempotent, so retries do not create duplicate sessions.',
-      'Ordered-sequence rounds require each option exactly once to keep scoring clean.',
-      'Storage mode is explicit: memory for throwaway runs, Postgres for durable environments.'
-    ],
-    docsTitle: 'Start here',
-    docsIntro: 'These docs keep both technical and non-technical contributors aligned.',
-    modesTitle: 'Pick the mode that matches player behavior',
-    modesIntro: 'You do not need custom backend mechanics for each new game concept.',
-    modeCards: [
-      {
-        mode: 'pick_one',
-        title: 'Multiple choice',
-        details: 'Players choose one answer. Puzzlebox handles correctness and simple scoring.'
-      },
-      {
-        mode: 'ordered_sequence',
-        title: 'Ranking or timeline',
-        details: 'Players place items in order. Puzzlebox evaluates position-by-position, with optional partial credit.'
-      },
-      {
-        mode: 'survey',
-        title: 'Opinion and preference',
-        details: 'Players submit a choice and receive crowd-distribution results instead of right/wrong scoring.'
-      }
-    ],
-    footerSummary: 'Puzzlebox helps teams ship daily games faster, with less custom backend work and clearer operational visibility.'
+    footerLine: 'Puzzlebox helps teams ship daily games faster, with less custom backend work and clearer operational visibility.'
   },
   agent: {
-    intro: 'Agent view uses technical language for implementation, integration, and contract safety.',
-    signalPills: [
+    headline: 'Contract-first daily-game API with idempotent sessions, typed SDK, and stable guardrails.',
+    subheadline: 'OpenAPI-first design with consistent schemas so teams and coding agents integrate quickly. Deterministic primitives, no brittle glue.',
+    primaryCta: { text: 'Agent Quickstart', href: '/agent-quickstart' },
+    secondaryCta: { text: 'SDK Reference', href: '/sdk' },
+    signals: [
       'OpenAPI contract at /doc',
       'Typed SDK: @puzzlebox/sdk',
       'Idempotent session lifecycle',
-      'Storage: memory or postgres'
+      'Memory or Postgres backend'
     ],
     panels: [
       {
         eyebrow: 'Agent Experience (AX)',
-        title: 'Deterministic primitives and guardrails reduce generation drift.',
-        body: 'Puzzlebox exposes explicit domain objects and consistent workflow semantics so generated frontends map to runtime behavior without brittle glue.',
+        title: 'Deterministic primitives reduce generation drift.',
+        body: 'Explicit domain objects and consistent workflow semantics. Generated frontends map to runtime behavior without guessing.',
         bullets: [
-          'Gameplay bootstrap starts at GET /api/v1/games/{slug}/today.',
-          'POST /api/v1/sessions is idempotent and can return session_exists.',
+          'Bootstrap at GET /api/v1/games/{slug}/today.',
+          'POST /sessions is idempotent \u2014 session_exists is a resume path.',
           'ordered_sequence answers must include every option key exactly once.',
-          'Completion returns share_data and streak payloads for direct UI rendering.'
+          'Completion returns share_data and streak payloads for direct rendering.'
         ]
       },
       {
         eyebrow: 'Data-forward operations',
-        title: 'Stable payloads from prototype to production analytics.',
-        body: 'Puzzlebox keeps event and response shapes consistent so downstream product analytics and editorial tooling do not need frequent schema rewrites.',
+        title: 'Stable payloads from prototype to production.',
+        body: 'Event and response shapes stay consistent. Downstream analytics and tooling skip frequent schema rewrites.',
         bullets: [
-          'Tenant-scoped analytics endpoints: overview, per-game, and per-edition.',
-          'Lifecycle policy is included in gameplay payloads for client branching.',
-          'Server-side validation keeps scoring and distribution data authoritative.',
-          'Docs, SDK, and OpenAPI remain contract-aligned for agent consumption.'
+          'Tenant-scoped analytics: overview, per-game, per-edition.',
+          'Lifecycle policy in gameplay payloads for client branching.',
+          'Server-side validation keeps scoring authoritative.',
+          'Docs, SDK, and OpenAPI remain contract-aligned.'
         ]
       }
     ],
     loopTitle: 'The loop agents ship',
-    loopSteps: [
-      {
-        title: 'Model with existing primitives',
-        body: 'Use pick_one, ordered_sequence, or survey instead of inventing new core entities.'
-      },
-      {
-        title: 'Bootstrap and branch by payload',
-        body: 'Resolve gameplay state via /today and existing_session before attempting a new session.'
-      },
-      {
-        title: 'Respond and complete with guardrails',
-        body: 'Submit round answers, handle session_completed/session_incomplete, and finalize once all rounds are answered.'
-      },
-      {
-        title: 'Instrument outcomes',
-        body: 'Capture share/streak data and analytics metrics without custom post-processing.'
-      }
+    steps: [
+      { title: 'Model with primitives', body: 'Use pick_one, ordered_sequence, or survey \u2014 no new entities.' },
+      { title: 'Bootstrap by payload', body: 'Resolve state via /today and existing_session before starting.' },
+      { title: 'Respond with guardrails', body: 'Submit answers, handle session states, finalize when complete.' },
+      { title: 'Instrument outcomes', body: 'Capture share/streak data and analytics without post-processing.' }
     ],
-    sampleEyebrow: 'Copy-ready SDK flow',
-    sampleTitle: 'TypeScript example',
-    sampleLead: 'This is contract-accurate with idempotent resume behavior.',
-    sampleSnippet: String.raw`import {
+    codeEyebrow: 'Copy-ready SDK flow',
+    codeTitle: 'TypeScript example',
+    codeLead: 'Contract-accurate with idempotent resume behavior.',
+    codeSnippet: `import {
   PuzzleboxClient,
   isPuzzleboxApiError,
   type SessionExistsPayload
@@ -226,180 +160,71 @@ await client.respond(sessionId, {
 
 const complete = await client.completeSession(sessionId);
 console.log(complete.share_data.share_text);`,
-    guardrailsTitle: 'Contract guardrails that keep generated output correct',
-    guardrails: [
-      'External API payloads are snake_case.',
-      'All requests include X-Tenant for scope resolution.',
-      'Admin routes require X-API-Key; gameplay routes require bearer JWT.',
-      'Frontend bootstrap starts at GET /api/v1/games/{slug}/today.',
-      'Session start is idempotent; session_exists is a resume path, not an exception path.',
-      'Storage backend is explicit: memory for throwaway runs, postgres for durable state.'
-    ],
-    docsTitle: 'Agent start pack',
-    docsIntro: 'Use these docs to keep scaffolding, implementation, and operations aligned.',
-    modesTitle: 'Choose the right gameplay mode',
-    modesIntro: 'Mode selection should match player interaction, not custom backend complexity.',
-    modeCards: [
-      {
-        mode: 'pick_one',
-        title: 'Single-key answer',
-        details: 'Binary correctness with direct per-round scoring and reveal metadata.'
-      },
-      {
-        mode: 'ordered_sequence',
-        title: 'Ordered array answer',
-        details: 'Position-aware validation with optional partial credit and sequence-derived max score.'
-      },
-      {
-        mode: 'survey',
-        title: 'Distribution response',
-        details: 'Participation scoring with aggregate distribution payloads and no correctness evaluation.'
-      }
-    ],
-    footerSummary: 'Puzzlebox optimizes for fast, reliable agent implementation with stable contracts and production-safe runtime boundaries.'
+    footerLine: 'Puzzlebox optimizes for fast, reliable agent implementation with stable contracts and production-safe runtime boundaries.'
   }
 };
 
-const resourceLinks = [
-  {
-    href: '/agent-quickstart',
-    label: 'Agent Quickstart',
-    human: 'High-level operating model and what to hand to technical builders.',
-    agent: 'Constraints, guardrails, and copy/paste implementation prompt.'
-  },
-  {
-    href: '/game-spec-template',
-    label: 'Game Spec Template',
-    human: 'A checklist to define your game clearly before implementation starts.',
-    agent: 'Required input shape to avoid guessing and contract drift.'
-  },
-  {
-    href: '/quickstart',
-    label: '10-Minute Quickstart',
-    human: 'A practical walkthrough from setup to one playable edition.',
-    agent: 'Bootstrap path: create game, publish edition, play end-to-end.'
-  },
-  {
-    href: '/storage',
-    label: 'Storage',
-    human: 'When to use simple local mode vs durable production persistence.',
-    agent: 'Memory/postgres backend selection and environment constraints.'
-  },
-  {
-    href: '/sdk',
-    label: 'SDK',
-    human: 'How the app talks to Puzzlebox through one typed client library.',
-    agent: 'Method map and typed error handling for gameplay and admin flows.'
-  },
-  {
-    href: '/api/overview',
-    label: 'API Overview',
-    human: 'A map of what endpoints exist and what each one is for.',
-    agent: 'Contract semantics, object graph, and lifecycle guardrails.'
-  }
-] as const;
-
-const copy = computed(() => audienceCopy[audience.value]);
+const copy = computed(() => content[audience.value]);
 </script>
 
 <template>
-  <section class="audience-switcher-wrap">
-    <p class="lp-eyebrow">Audience Switch</p>
-    <div class="audience-switcher" role="tablist" aria-label="Homepage language mode">
-      <button
-        role="tab"
-        class="audience-switch-btn"
-        :class="{ 'is-active': audience === 'human' }"
-        :aria-selected="audience === 'human'"
-        @click="audience = 'human'"
-      >
-        Human View
-      </button>
-      <button
-        role="tab"
-        class="audience-switch-btn"
-        :class="{ 'is-active': audience === 'agent' }"
-        :aria-selected="audience === 'agent'"
-        @click="audience = 'agent'"
-      >
-        Agent View
-      </button>
+  <!-- Hero: ASCII mark + headline -->
+  <section class="pb-hero-text">
+    <HeroMarkTyping />
+    <h1 class="pb-headline">{{ copy.headline }}</h1>
+    <p class="pb-subheadline">{{ copy.subheadline }}</p>
+    <div class="pb-actions">
+      <a :href="copy.primaryCta.href" class="pb-btn pb-btn-primary">{{ copy.primaryCta.text }}</a>
+      <a :href="copy.secondaryCta.href" class="pb-btn pb-btn-secondary">{{ copy.secondaryCta.text }}</a>
     </div>
-    <p class="audience-switch-note">{{ copy.intro }}</p>
   </section>
 
-  <div class="lp-signal-strip">
-    <span v-for="pill in copy.signalPills" :key="pill">{{ pill }}</span>
-  </div>
+  <!-- Signal pills -->
+  <section class="pb-signals">
+    <span v-for="(pill, i) in copy.signals" :key="i" class="pb-pill">{{ pill }}</span>
+  </section>
 
-  <section class="lp-top-grid">
-    <article v-for="panel in copy.panels" :key="panel.title" class="lp-panel">
-      <p class="lp-eyebrow">{{ panel.eyebrow }}</p>
+  <!-- Value panels -->
+  <section class="pb-panels">
+    <article v-for="(panel, i) in copy.panels" :key="i" class="pb-panel">
+      <p class="pb-eyebrow">{{ panel.eyebrow }}</p>
       <h2>{{ panel.title }}</h2>
-      <p>{{ panel.body }}</p>
+      <p class="pb-panel-body">{{ panel.body }}</p>
       <ul>
-        <li v-for="bullet in panel.bullets" :key="bullet">{{ bullet }}</li>
+        <li v-for="(bullet, j) in panel.bullets" :key="j">{{ bullet }}</li>
       </ul>
     </article>
   </section>
 
-  <h2>{{ copy.loopTitle }}</h2>
-
-  <section class="lp-loop-grid">
-    <article v-for="(step, index) in copy.loopSteps" :key="step.title" class="lp-loop-step">
-      <p class="lp-step">{{ index + 1 }}</p>
-      <h3>{{ step.title }}</h3>
-      <p>{{ step.body }}</p>
-    </article>
-  </section>
-
-  <section class="lp-sample-grid">
-    <article class="lp-code-panel">
-      <p class="lp-eyebrow">{{ copy.sampleEyebrow }}</p>
-      <h3>{{ copy.sampleTitle }}</h3>
-      <p class="lp-code-lead">{{ copy.sampleLead }}</p>
-      <pre><code>{{ copy.sampleSnippet }}</code></pre>
-    </article>
-  </section>
-
-  <section class="lp-callout">
-    <h2>{{ copy.guardrailsTitle }}</h2>
-    <ul>
-      <li v-for="guardrail in copy.guardrails" :key="guardrail">{{ guardrail }}</li>
-    </ul>
-  </section>
-
-  <section class="lp-resource-section">
-    <h2>{{ copy.docsTitle }}</h2>
-    <p class="lp-section-intro">{{ copy.docsIntro }}</p>
-    <div class="resource-grid">
-      <a v-for="link in resourceLinks" :key="link.href" :href="link.href" class="resource-card">
-        <h3>{{ link.label }}</h3>
-        <p>{{ audience === 'human' ? link.human : link.agent }}</p>
-      </a>
-    </div>
-  </section>
-
-  <section class="lp-mode-section">
-    <h2>{{ copy.modesTitle }}</h2>
-    <p class="lp-section-intro">{{ copy.modesIntro }}</p>
-    <div class="mode-grid">
-      <article v-for="card in copy.modeCards" :key="card.mode" class="mode-card">
-        <p class="lp-eyebrow">{{ card.mode }}</p>
-        <h3>{{ card.title }}</h3>
-        <p>{{ card.details }}</p>
+  <!-- Game loop steps -->
+  <section class="pb-loop-section">
+    <h2 class="pb-section-title">{{ copy.loopTitle }}</h2>
+    <div class="pb-steps">
+      <article v-for="(step, i) in copy.steps" :key="i" class="pb-step">
+        <span class="pb-step-num">{{ i + 1 }}</span>
+        <h3>{{ step.title }}</h3>
+        <p>{{ step.body }}</p>
       </article>
     </div>
   </section>
 
-  <footer class="docs-footer">
-    <div class="footer-grid">
+  <!-- Code / walkthrough -->
+  <section class="pb-code-section">
+    <p class="pb-eyebrow">{{ copy.codeEyebrow }}</p>
+    <h3 class="pb-code-title">{{ copy.codeTitle }}</h3>
+    <p class="pb-code-lead">{{ copy.codeLead }}</p>
+    <pre class="pb-code-block"><code>{{ copy.codeSnippet }}</code></pre>
+  </section>
+
+  <!-- Footer -->
+  <footer class="pb-footer">
+    <div class="pb-footer-grid">
       <div>
-        <h3>Puzzlebox</h3>
-        <p>{{ copy.footerSummary }}</p>
+        <h3 class="pb-footer-brand">Puzzlebox</h3>
+        <p>{{ copy.footerLine }}</p>
       </div>
       <div>
-        <h4>Agent Docs</h4>
+        <h4>Get Started</h4>
         <ul>
           <li><a href="/agent-quickstart">Agent Quickstart</a></li>
           <li><a href="/game-spec-template">Game Spec Template</a></li>
@@ -415,8 +240,5 @@ const copy = computed(() => audienceCopy[audience.value]);
         </ul>
       </div>
     </div>
-    <p class="footer-meta">
-      Puzzlebox keeps the same runtime model while tailoring explanation tone for people and agents.
-    </p>
   </footer>
 </template>

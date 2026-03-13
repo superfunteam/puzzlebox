@@ -4,6 +4,7 @@ export default defineConfig({
   title: 'Puzzlebox Docs',
   description: 'Agent-first game backend for daily-play newsroom games',
   cleanUrls: true,
+  appearance: false,
   themeConfig: {
     logo: '/logo-block.svg',
     siteTitle: 'PuzzleBox',
