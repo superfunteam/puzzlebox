@@ -1002,7 +1002,7 @@ Railway over serverless (Netlify Functions, Cloudflare Workers) is a deliberate 
 ### Local development (Docker Compose)
 
 ```bash
-git clone https://github.com/puzzlebox-games/puzzlebox
+git clone https://github.com/superfunteam/puzzlebox
 cd puzzlebox
 cp .env.example .env        # Configure JWT secret, etc.
 docker compose up -d         # Starts API on :3000, Postgres on :5432

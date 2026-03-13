@@ -48,7 +48,7 @@ export default defineConfig({
       }
     ],
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/puzzlebox-games/puzzlebox' }
+      { icon: 'github', link: 'https://github.com/superfunteam/puzzlebox' }
     ]
   }
 });
