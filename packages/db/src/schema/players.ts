@@ -1,5 +1,5 @@
 import { pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { tenants } from './tenants';
+import { tenants } from './tenants.js';
 
 export const authMethodEnum = pgEnum('auth_method', ['magic_link', 'external', 'anonymous']);
 

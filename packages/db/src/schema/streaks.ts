@@ -1,7 +1,7 @@
 import { date, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { games } from './games';
-import { players } from './players';
-import { tenants } from './tenants';
+import { games } from './games.js';
+import { players } from './players.js';
+import { tenants } from './tenants.js';
 
 export const streakEventTypeEnum = pgEnum('streak_event_type', ['auto_consumed', 'manual_consumed', 'granted', 'purchased']);
 

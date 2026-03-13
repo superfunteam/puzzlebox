@@ -1,6 +1,6 @@
 import { date, jsonb, pgEnum, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { games } from './games';
-import { tenants } from './tenants';
+import { games } from './games.js';
+import { tenants } from './tenants.js';
 
 export const editionStatusEnum = pgEnum('edition_status', ['draft', 'scheduled', 'active', 'archived']);
 

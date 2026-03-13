@@ -1,7 +1,7 @@
 import { integer, jsonb, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { editions } from './editions';
-import { players } from './players';
-import { tenants } from './tenants';
+import { editions } from './editions.js';
+import { players } from './players.js';
+import { tenants } from './tenants.js';
 
 export const sessions = pgTable(
   'sessions',

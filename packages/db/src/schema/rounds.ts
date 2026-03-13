@@ -1,6 +1,6 @@
 import { integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { editions } from './editions';
-import { tenants } from './tenants';
+import { editions } from './editions.js';
+import { tenants } from './tenants.js';
 
 export const rounds = pgTable(
   'rounds',
