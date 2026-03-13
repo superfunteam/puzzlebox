@@ -16,7 +16,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npm run build -w @puzzlebox/db
       - run: npm run ${{ matrix.task }}
 
   openapi-drift:
@@ -56,6 +55,5 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npm run build -w @puzzlebox/db
       - run: npm run db:push
       - run: npm run test -w @puzzlebox/api
