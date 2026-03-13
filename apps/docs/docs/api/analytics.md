@@ -6,46 +6,36 @@ Analytics endpoints expose engagement and gameplay quality at tenant, game, and 
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /analytics/overview` | Tenant-wide daily active players + game summary |
-| `GET /games/{slug}/analytics` | Game-level engagement and scoring metrics |
-| `GET /editions/{id}/analytics` | Per-edition funnel, score distribution, and round difficulty |
+| `GET /analytics/overview` | Tenant-wide daily activity and game summary |
+| `GET /games/{slug}/analytics` | Game-level engagement metrics |
+| `GET /editions/{id}/analytics` | Per-edition completion and round performance |
 
-## Overview payload focus
+## What You Get
+
+### Overview
 
 - `daily_active_players`
 - `total_sessions_today`
-- Game-level completion-rate snapshots
+- per-game completion snapshots
 
-## Game analytics focus
+Daily activity is calculated using the tenant’s timezone, not raw UTC boundaries.
 
-- Completion rate
-- Average score percentage
-- Share rate
-- Return rate
-- Session totals
+### Game Analytics
 
-## Edition analytics focus
+- completion rate
+- average score percentage
+- share rate
+- return rate
+- total sessions
 
-- Session starts vs completions (funnel)
-- Per-round accuracy
-- Score distribution
-- Average duration
+### Edition Analytics
 
-## Event taxonomy (recommended)
+- total vs completed sessions
+- completion rate
+- max possible score
+- per-round accuracy
+- score distribution
 
-Track and correlate:
+## Agent Guidance
 
-- `session.started`
-- `round.responded`
-- `session.completed`
-- `share.generated`
-- `streak.updated`
-- `auth.login`
-
-## Practical newsroom KPI joins
-
-Use `external_id` alignment with subscriber systems to compute retention signals such as:
-
-- Return rate delta for players with 7+ day streaks
-- Completion vs share behavior by edition type
-- Difficulty curves by round position
+If you are building a launch MVP, analytics should usually be read-only. Agents should consume these endpoints before inventing custom reporting tables or ad hoc aggregate queries.

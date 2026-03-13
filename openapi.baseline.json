@@ -2,7 +2,2786 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Puzzlebox API",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "description": "Agent-first API primitives for tenant-scoped daily games: scheduling, validation, sessions, streaks, sharing, and analytics."
   },
-  "paths": {}
+  "components": {
+    "schemas": {
+      "GamesListResponse": {
+        "type": "object",
+        "properties": {
+          "games": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Game"
+                },
+                {
+                  "$ref": "#/components/schemas/PublicGame"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "games"
+        ]
+      },
+      "Game": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/GameLifecycle"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/GamePolicy"
+          },
+          "name": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "config": {
+            "$ref": "#/components/schemas/GameConfig"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "mode",
+          "lifecycle",
+          "policy",
+          "name",
+          "active",
+          "config"
+        ]
+      },
+      "GameMode": {
+        "type": "string",
+        "enum": [
+          "pick_one",
+          "ordered_sequence",
+          "survey"
+        ]
+      },
+      "GameLifecycle": {
+        "type": "string",
+        "enum": [
+          "playtest",
+          "production"
+        ]
+      },
+      "GamePolicy": {
+        "type": "object",
+        "properties": {
+          "max_unique_players": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "setup_model": {
+            "type": "string",
+            "enum": [
+              "free",
+              "paid"
+            ]
+          }
+        },
+        "required": [
+          "max_unique_players",
+          "setup_model"
+        ]
+      },
+      "GameConfig": {
+        "type": "object",
+        "properties": {
+          "rounds_per_edition": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25
+          },
+          "partial_credit": {
+            "type": "boolean"
+          },
+          "share_emoji_correct": {
+            "type": "string"
+          },
+          "share_emoji_incorrect": {
+            "type": "string"
+          },
+          "share_emoji_game": {
+            "type": "string"
+          },
+          "share_url_template": {
+            "type": "string",
+            "format": "uri"
+          },
+          "allow_anonymous": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rounds_per_edition",
+          "partial_credit",
+          "share_emoji_correct",
+          "share_emoji_incorrect",
+          "share_emoji_game",
+          "share_url_template",
+          "allow_anonymous"
+        ]
+      },
+      "PublicGame": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/GameLifecycle"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/GamePolicy"
+          },
+          "has_today": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "mode",
+          "lifecycle",
+          "policy",
+          "has_today"
+        ]
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "CreateGameRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mode": {
+            "$ref": "#/components/schemas/GameMode"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/GameLifecycle"
+          },
+          "config": {
+            "$ref": "#/components/schemas/GameConfig"
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "mode",
+          "config"
+        ]
+      },
+      "PatchGameRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/GameLifecycle"
+          },
+          "config": {
+            "$ref": "#/components/schemas/PatchGameConfig"
+          }
+        }
+      },
+      "PatchGameConfig": {
+        "type": "object",
+        "properties": {
+          "rounds_per_edition": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25
+          },
+          "partial_credit": {
+            "type": "boolean"
+          },
+          "share_emoji_correct": {
+            "type": "string"
+          },
+          "share_emoji_incorrect": {
+            "type": "string"
+          },
+          "share_emoji_game": {
+            "type": "string"
+          },
+          "share_url_template": {
+            "type": "string",
+            "format": "uri"
+          },
+          "allow_anonymous": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TodayResponse": {
+        "type": "object",
+        "properties": {
+          "edition_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "edition_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "game": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/components/schemas/GameMode"
+              },
+              "lifecycle": {
+                "$ref": "#/components/schemas/GameLifecycle"
+              },
+              "policy": {
+                "$ref": "#/components/schemas/GamePolicy"
+              }
+            },
+            "required": [
+              "name",
+              "slug",
+              "mode",
+              "lifecycle",
+              "policy"
+            ]
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Round"
+            }
+          },
+          "existing_session": {
+            "$ref": "#/components/schemas/SessionState"
+          }
+        },
+        "required": [
+          "edition_id",
+          "edition_date",
+          "game",
+          "rounds",
+          "existing_session"
+        ]
+      },
+      "Round": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "edition_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            }
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/LooseObject"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "edition_id",
+          "position",
+          "prompt",
+          "options",
+          "metadata",
+          "created_at"
+        ]
+      },
+      "Option": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "key",
+          "label"
+        ]
+      },
+      "LooseObject": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "additionalProperties": {}
+      },
+      "SessionState": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "player_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "edition_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "max_score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "share_data": {
+            "$ref": "#/components/schemas/ShareData"
+          },
+          "responses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseRecord"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "player_id",
+          "edition_id",
+          "started_at",
+          "completed_at",
+          "score",
+          "max_score",
+          "share_data",
+          "responses"
+        ]
+      },
+      "ShareData": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "game_name": {
+            "type": "string"
+          },
+          "game_emoji": {
+            "type": "string"
+          },
+          "edition_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "max_score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "streak": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "per_round": {
+            "type": "array",
+            "items": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "share_text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "game_name",
+          "game_emoji",
+          "edition_date",
+          "score",
+          "max_score",
+          "streak",
+          "per_round",
+          "share_text"
+        ]
+      },
+      "ResponseRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "round_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/Answer"
+          },
+          "is_correct": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "responded_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "session_id",
+          "round_id",
+          "answer",
+          "is_correct",
+          "score",
+          "responded_at"
+        ]
+      },
+      "Answer": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "key"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "order": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "order"
+            ]
+          }
+        ]
+      },
+      "CreateEditionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "edition_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EditionStatus"
+          },
+          "round_count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "edition_date",
+          "status",
+          "round_count"
+        ]
+      },
+      "EditionStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "scheduled",
+          "active",
+          "archived"
+        ]
+      },
+      "CreateEditionRequest": {
+        "type": "object",
+        "properties": {
+          "edition_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EditionStatus"
+          },
+          "publish_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/LooseObject"
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateRoundRequest"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "edition_date",
+          "status",
+          "rounds"
+        ]
+      },
+      "CreateRoundRequest": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "minItems": 2
+          },
+          "correct_answer": {
+            "$ref": "#/components/schemas/LooseObject"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/LooseObject"
+          }
+        },
+        "required": [
+          "position",
+          "prompt",
+          "options",
+          "correct_answer"
+        ]
+      },
+      "EditionListResponse": {
+        "type": "object",
+        "properties": {
+          "editions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Edition"
+            }
+          }
+        },
+        "required": [
+          "editions"
+        ]
+      },
+      "Edition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "game_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "edition_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EditionStatus"
+          },
+          "publish_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/LooseObject"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "game_id",
+          "edition_date",
+          "status",
+          "publish_at",
+          "metadata",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "EditionDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Edition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "rounds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AdminRound"
+                }
+              }
+            },
+            "required": [
+              "rounds"
+            ]
+          }
+        ]
+      },
+      "AdminRound": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Round"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "correct_answer": {
+                "$ref": "#/components/schemas/LooseObject"
+              }
+            },
+            "required": [
+              "correct_answer"
+            ]
+          }
+        ]
+      },
+      "PatchEditionRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/EditionStatus"
+          },
+          "publish_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/LooseObject"
+          }
+        }
+      },
+      "PatchRoundRequest": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "minItems": 2
+          },
+          "correct_answer": {
+            "$ref": "#/components/schemas/LooseObject"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/LooseObject"
+          }
+        }
+      },
+      "DeleteResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "deleted"
+        ]
+      },
+      "StartSessionResponse": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "session_id",
+          "started_at"
+        ]
+      },
+      "SessionExistsError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "session_exists"
+            ]
+          },
+          "existing_session": {
+            "$ref": "#/components/schemas/SessionState"
+          }
+        },
+        "required": [
+          "error",
+          "existing_session"
+        ]
+      },
+      "EditionNotPlayableError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "edition_not_playable"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/EditionStatus"
+          }
+        },
+        "required": [
+          "error",
+          "status"
+        ]
+      },
+      "StartSessionRequest": {
+        "type": "object",
+        "properties": {
+          "edition_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "edition_id"
+        ]
+      },
+      "RespondResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/EvaluatedRoundResponse"
+          },
+          {
+            "$ref": "#/components/schemas/SurveyRoundResponse"
+          }
+        ]
+      },
+      "EvaluatedRoundResponse": {
+        "type": "object",
+        "properties": {
+          "is_correct": {
+            "type": "boolean"
+          },
+          "correct_answer": {
+            "$ref": "#/components/schemas/LooseObject"
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/LooseObject"
+          },
+          "positions_correct": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          }
+        },
+        "required": [
+          "is_correct",
+          "correct_answer",
+          "score",
+          "metadata"
+        ]
+      },
+      "SurveyRoundResponse": {
+        "type": "object",
+        "properties": {
+          "is_correct": {
+            "type": "null"
+          },
+          "distribution": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SurveyDistributionEntry"
+            }
+          },
+          "total_responses": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "your_answer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "is_correct",
+          "distribution",
+          "total_responses",
+          "your_answer"
+        ]
+      },
+      "SurveyDistributionEntry": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "percentage": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "label",
+          "count",
+          "percentage"
+        ]
+      },
+      "RespondRequest": {
+        "type": "object",
+        "properties": {
+          "round_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/Answer"
+          }
+        },
+        "required": [
+          "round_id",
+          "answer"
+        ]
+      },
+      "CompleteSessionResponse": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "max_score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "streak": {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "longest": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "is_new_record": {
+                "type": "boolean"
+              },
+              "freezes_remaining": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "current",
+              "longest",
+              "is_new_record",
+              "freezes_remaining"
+            ]
+          },
+          "share_data": {
+            "$ref": "#/components/schemas/ShareData"
+          }
+        },
+        "required": [
+          "session_id",
+          "score",
+          "max_score",
+          "duration_seconds",
+          "streak",
+          "share_data"
+        ]
+      },
+      "PlayerListResponse": {
+        "type": "object",
+        "properties": {
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Player"
+            }
+          }
+        },
+        "required": [
+          "players"
+        ]
+      },
+      "Player": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "auth_method": {
+            "$ref": "#/components/schemas/AuthMethod"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          },
+          "external_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "auth_method",
+          "email",
+          "external_id",
+          "display_name",
+          "timezone",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "AuthMethod": {
+        "type": "string",
+        "enum": [
+          "magic_link",
+          "oauth",
+          "external",
+          "anonymous"
+        ]
+      },
+      "PlayerStats": {
+        "type": "object",
+        "properties": {
+          "player_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "games": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "game_slug": {
+                  "type": "string"
+                },
+                "total_sessions": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "current_streak": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "longest_streak": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "average_score_pct": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "last_played": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "freezes_remaining": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "game_slug",
+                "total_sessions",
+                "current_streak",
+                "longest_streak",
+                "average_score_pct",
+                "last_played",
+                "freezes_remaining"
+              ]
+            }
+          }
+        },
+        "required": [
+          "player_id",
+          "games"
+        ]
+      },
+      "PatchMeRequest": {
+        "type": "object",
+        "properties": {
+          "timezone": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          }
+        }
+      },
+      "AnalyticsOverview": {
+        "type": "object",
+        "properties": {
+          "daily_active_players": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "total_sessions_today": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "games": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slug": {
+                  "type": "string"
+                },
+                "dap": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "completion_rate": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "slug",
+                "dap",
+                "completion_rate"
+              ]
+            }
+          }
+        },
+        "required": [
+          "daily_active_players",
+          "total_sessions_today",
+          "games"
+        ]
+      },
+      "GameAnalytics": {
+        "type": "object",
+        "properties": {
+          "game_slug": {
+            "type": "string"
+          },
+          "daily_active_players": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completion_rate": {
+            "type": "number",
+            "minimum": 0
+          },
+          "average_score_pct": {
+            "type": "number",
+            "minimum": 0
+          },
+          "share_rate": {
+            "type": "number",
+            "minimum": 0
+          },
+          "return_rate": {
+            "type": "number",
+            "minimum": 0
+          },
+          "streak_distribution": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "editions_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "total_sessions_all_time": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "game_slug",
+          "daily_active_players",
+          "completion_rate",
+          "average_score_pct",
+          "share_rate",
+          "return_rate",
+          "streak_distribution",
+          "editions_count",
+          "total_sessions_all_time"
+        ]
+      },
+      "EditionAnalytics": {
+        "type": "object",
+        "properties": {
+          "edition_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "total_sessions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completed_sessions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completion_rate": {
+            "type": "number",
+            "minimum": 0
+          },
+          "average_score": {
+            "type": "number",
+            "minimum": 0
+          },
+          "max_possible_score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "average_duration_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "per_round": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "round_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "accuracy": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "most_common_wrong": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "round_id",
+                "position",
+                "accuracy",
+                "most_common_wrong"
+              ]
+            }
+          },
+          "score_distribution": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "completion_funnel": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "survey_distributions": {
+            "$ref": "#/components/schemas/LooseObject"
+          }
+        },
+        "required": [
+          "edition_id",
+          "total_sessions",
+          "completed_sessions",
+          "completion_rate",
+          "average_score",
+          "max_possible_score",
+          "average_duration_seconds",
+          "per_round",
+          "score_distribution",
+          "completion_funnel",
+          "survey_distributions"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/v1/auth/magic-link": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Magic link queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "expires_in": {
+                      "type": "number"
+                    },
+                    "token_preview": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "expires_in",
+                    "token_preview"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "player_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "jwt": {
+                      "type": "string"
+                    },
+                    "expires_at": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "player_id",
+                    "jwt",
+                    "expires_at"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/anonymous": {
+      "post": {
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "timezone": {
+                    "type": "string"
+                  },
+                  "device_fingerprint": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anonymous JWT issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "player_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "jwt": {
+                      "type": "string"
+                    },
+                    "anonymous": {
+                      "type": "boolean"
+                    },
+                    "expires_at": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "player_id",
+                    "jwt",
+                    "anonymous",
+                    "expires_at"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/claim": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "anonymous_jwt": {
+                    "type": "string"
+                  },
+                  "authenticated_jwt": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "anonymous_jwt",
+                  "authenticated_jwt"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anonymous account merged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "player_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "sessions_merged": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "player_id",
+                    "sessions_merged"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/external": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "external_token": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "external_token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "External auth JWT issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "player_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "jwt": {
+                      "type": "string"
+                    },
+                    "expires_at": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "player_id",
+                    "jwt",
+                    "expires_at"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/oauth/{provider}/start": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "provider",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "501": {
+            "description": "OAuth start not enabled in baseline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "provider": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "provider",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/oauth/{provider}/callback": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "provider",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "501": {
+            "description": "OAuth callback not enabled in baseline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "provider": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "provider",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List games",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamesListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Game created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Game"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Game slug already exists for tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/{slug}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Game detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Game"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Game not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchGameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Game patched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Game"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Game not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Game soft-deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "active"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Game not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/{slug}/today": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Today edition for a game",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No active edition for today",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/{slug}/editions": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEditionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Edition created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateEditionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Game not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Edition already exists for this game and date",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Edition payload violates game invariants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Edition list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditionListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Game not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/editions/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Edition detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditionDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Edition not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchEditionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Edition patched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Edition"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Edition not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/editions/{id}/publish": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Edition published",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Edition"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Edition not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/editions/{id}/archive": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Edition archived",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Edition"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Edition not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/editions/{id}/rounds": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Round list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rounds": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminRound"
+                      }
+                    }
+                  },
+                  "required": [
+                    "rounds"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Edition not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rounds/{id}": {
+      "patch": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRoundRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Round patched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRound"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Round not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Round can only be changed while edition is in draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Round deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Round not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Round can only be changed while edition is in draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartSessionResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Playtest capacity reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "playtest_capacity_reached"
+                      ]
+                    },
+                    "max_unique_players": {
+                      "type": "integer"
+                    },
+                    "current_unique_players": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "max_unique_players",
+                    "current_unique_players"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session exists or edition is not currently playable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionExistsError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/EditionNotPlayableError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionState"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/respond": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RespondRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Round response accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespondResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session or edition not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Answer or round validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/complete": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompleteSessionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session or player not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/players": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List players",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/players/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get player",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Player"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Player not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete player",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Player not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/stats": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Player stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "patch": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchMeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Player patched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Player"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Player not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/overview": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Overview analytics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/{slug}/analytics": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Game analytics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameAnalytics"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Game not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/editions/{id}/analytics": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Edition analytics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditionAnalytics"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Edition not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
 }

@@ -91,7 +91,7 @@ export function App() {
               padding: 12
             }}
           >
-            {String((complete.share_data as Record<string, unknown>).share_text ?? '')}
+            {complete.share_data.share_text}
           </pre>
         </section>
       )}

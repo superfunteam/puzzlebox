@@ -1,10 +1,98 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { PuzzleboxClient } from '@puzzlebox/sdk';
+import {
+  isPuzzleboxApiError,
+  type CompleteSessionResponse,
+  type PuzzleboxClient,
+  type PuzzleboxSession,
+  type PuzzleboxShareData,
+  type PuzzleboxTodayResponse,
+  type RespondResponse,
+  type SessionExistsPayload
+} from '@puzzlebox/sdk';
 
 interface RoundView {
   id: string;
   prompt: string;
   options: Array<{ key: string; label: string }>;
+}
+
+interface CompleteView {
+  score: number;
+  max_score: number;
+  share_data: PuzzleboxShareData;
+}
+
+function toCompleteView(session: PuzzleboxSession): CompleteView | null {
+  if (session.score === null || session.max_score === null || session.share_data === null) {
+    return null;
+  }
+
+  return {
+    score: session.score,
+    max_score: session.max_score,
+    share_data: session.share_data
+  };
+}
+
+async function resolvePlayableSession(client: PuzzleboxClient, today: PuzzleboxTodayResponse): Promise<{
+  sessionId: string;
+  currentRound: number;
+  complete: CompleteView | CompleteSessionResponse | null;
+}> {
+  const existing = today.existing_session;
+
+  if (existing) {
+    const complete = toCompleteView(existing);
+    if (complete) {
+      return {
+        sessionId: existing.id,
+        currentRound: today.rounds.length,
+        complete
+      };
+    }
+
+    if (existing.responses.length >= today.rounds.length) {
+      const finalized = await client.completeSession(existing.id);
+      return {
+        sessionId: existing.id,
+        currentRound: today.rounds.length,
+        complete: finalized
+      };
+    }
+
+    return {
+      sessionId: existing.id,
+      currentRound: existing.responses.length,
+      complete: null
+    };
+  }
+
+  try {
+    const session = await client.startSession(today.edition_id);
+    return {
+      sessionId: session.session_id,
+      currentRound: 0,
+      complete: null
+    };
+  } catch (error) {
+    if (
+      isPuzzleboxApiError<SessionExistsPayload>(error) &&
+      typeof error.payload === 'object' &&
+      error.payload !== null &&
+      error.payload.error === 'session_exists'
+    ) {
+      const resumed = error.payload.existing_session;
+      const complete = toCompleteView(resumed);
+
+      return {
+        sessionId: resumed.id,
+        currentRound: complete ? today.rounds.length : resumed.responses.length,
+        complete
+      };
+    }
+
+    throw error;
+  }
 }
 
 export function useWhoSays(client: PuzzleboxClient) {
@@ -13,8 +101,8 @@ export function useWhoSays(client: PuzzleboxClient) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [rounds, setRounds] = useState<RoundView[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
-  const [complete, setComplete] = useState<Record<string, unknown> | null>(null);
+  const [result, setResult] = useState<RespondResponse | null>(null);
+  const [complete, setComplete] = useState<CompleteView | CompleteSessionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,18 +116,21 @@ export function useWhoSays(client: PuzzleboxClient) {
         const today = await client.getToday('who-says');
         if (!active) return;
 
-        const todayRounds = (today.rounds as RoundView[]) ?? [];
-        setEditionId(today.edition_id as string);
+        const todayRounds = today.rounds as RoundView[];
+        setEditionId(today.edition_id);
         setRounds(todayRounds);
 
-        const session = await client.startSession(today.edition_id as string);
+        const sessionState = await resolvePlayableSession(client, today);
         if (!active) return;
-        setSessionId(session.session_id);
+
+        setSessionId(sessionState.sessionId);
+        setCurrentRound(sessionState.currentRound);
+        setComplete(sessionState.complete);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unexpected error';
-        setError(message);
+        if (active) setError(message);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
 
@@ -54,20 +145,29 @@ export function useWhoSays(client: PuzzleboxClient) {
 
   async function answer(key: string) {
     if (!sessionId || !round) return;
-    const payload = await client.respond(sessionId, {
-      round_id: round.id,
-      answer: { key }
-    });
 
-    setResult(payload);
+    try {
+      setError(null);
 
-    if (currentRound + 1 < rounds.length) {
-      setCurrentRound((value) => value + 1);
-      return;
+      const payload = await client.respond(sessionId, {
+        round_id: round.id,
+        answer: { key }
+      });
+
+      setResult(payload);
+
+      if (currentRound + 1 < rounds.length) {
+        setCurrentRound((value) => value + 1);
+        return;
+      }
+
+      const completed = await client.completeSession(sessionId);
+      setComplete(completed);
+      setCurrentRound(rounds.length);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unexpected error';
+      setError(message);
     }
-
-    const completed = await client.completeSession(sessionId);
-    setComplete(completed);
   }
 
   return {
@@ -78,6 +178,6 @@ export function useWhoSays(client: PuzzleboxClient) {
     result,
     complete,
     answer,
-    remaining: rounds.length - currentRound
+    remaining: Math.max(rounds.length - currentRound, 0)
   };
 }

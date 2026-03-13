@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { AUTH_METHODS, EDITION_STATUSES, GAME_MODES } from './constants';
+import { AUTH_METHODS, EDITION_STATUSES, GAME_LIFECYCLES, GAME_MODES } from './constants';
 
 export const gameModeSchema = z.enum(GAME_MODES);
+export const gameLifecycleSchema = z.enum(GAME_LIFECYCLES);
 export const editionStatusSchema = z.enum(EDITION_STATUSES);
 export const authMethodSchema = z.enum(AUTH_METHODS);
 
@@ -24,6 +25,7 @@ export const createGameSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
   mode: gameModeSchema,
+  lifecycle: gameLifecycleSchema.default('production'),
   config: gameConfigSchema
 });
 

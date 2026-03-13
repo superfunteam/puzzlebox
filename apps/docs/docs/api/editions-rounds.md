@@ -1,34 +1,42 @@
 # Editions & Rounds API
 
-Editions are daily puzzle instances tied to one game. Rounds are ordered interaction units inside an edition.
+An edition is one day’s playable content for one game. Rounds are the ordered prompts inside that edition.
 
-## Edition endpoints
+## Edition Endpoints
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /games/{slug}/editions` | Create full edition with all rounds |
+| `POST /games/{slug}/editions` | Create one edition with all rounds |
 | `GET /games/{slug}/editions` | List editions for a game |
-| `GET /editions/{id}` | Fetch edition + rounds (includes answers for admin) |
-| `PATCH /editions/{id}` | Update status/metadata/schedule |
-| `POST /editions/{id}/publish` | Transition to `active` |
-| `POST /editions/{id}/archive` | Transition to `archived` |
+| `GET /editions/{id}` | Fetch an edition and its rounds |
+| `PATCH /editions/{id}` | Update status, schedule, or metadata |
+| `POST /editions/{id}/publish` | Mark an edition `active` |
+| `POST /editions/{id}/archive` | Mark an edition `archived` |
 
-## Round endpoints
+## Round Endpoints
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /editions/{id}/rounds` | Round listing |
-| `PATCH /rounds/{id}` | Update round (draft editions only) |
-| `DELETE /rounds/{id}` | Delete round (draft editions only) |
+| `GET /editions/{id}/rounds` | List rounds for an edition |
+| `PATCH /rounds/{id}` | Update a round while the edition is still draft |
+| `DELETE /rounds/{id}` | Delete a round while the edition is still draft |
 
-## Required invariants
+## Invariants
 
 - Round count must match `game.config.rounds_per_edition`.
-- `survey` rounds must have `correct_answer: null`.
+- `survey` rounds must not include `correct_answer`.
 - Non-survey rounds must include `correct_answer`.
-- Duplicate edition date for same game is rejected (`409`).
+- Duplicate edition dates for the same game are rejected.
 
-## Publish semantics
+## Response Shape
 
-- `scheduled` + `publish_at` supports auto-activation.
-- Scheduler checks due editions on a fixed interval.
+Admin edition and round responses are normalized to external `snake_case`.
+
+That means agents should expect fields like:
+
+- `edition_date`
+- `publish_at`
+- `correct_answer`
+- `created_at`
+
+not the internal TypeScript field names.

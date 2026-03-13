@@ -1,4 +1,4 @@
-import type { AuthMethod, EditionStatus, GameMode } from './constants';
+import type { AuthMethod, EditionStatus, GameLifecycle, GameMode, GameSetupModel } from './constants';
 
 export interface Tenant {
   id: string;
@@ -26,10 +26,16 @@ export interface Game {
   name: string;
   slug: string;
   mode: GameMode;
+  lifecycle: GameLifecycle;
   config: GameConfig;
   active: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface GamePolicy {
+  maxUniquePlayers: number | null;
+  setupModel: GameSetupModel;
 }
 
 export interface Edition {

@@ -1,5 +1,8 @@
+import { GAME_LIFECYCLE_POLICY } from '@puzzlebox/shared';
 import { requirePlayer } from '../../lib/authz';
+import { presentSession } from '../../lib/presenters';
 import { store } from '../../lib/store';
+import { getSessionMaxScore } from '../../services/scoring';
 import { validateOrderedSequence } from '../../validation/ordered-sequence';
 import { validatePickOne } from '../../validation/pick-one';
 import { validateSurvey } from '../../validation/survey';
@@ -8,12 +11,7 @@ import { updateStreak } from '../../services/streak';
 import { getEnv } from '../../lib/env';
 
 function getGameByEdition(tenantId: string, editionId: string) {
-  const edition = store.getEdition(tenantId, editionId);
-  if (!edition) return null;
-  const games = store.listGames(tenantId);
-  const game = games.find((candidate) => candidate.id === edition.gameId) ?? null;
-  if (!game) return null;
-  return { game, edition };
+  return store.getGameByEdition(tenantId, editionId);
 }
 
 export const sessionsHandlers = {
@@ -26,10 +24,47 @@ export const sessionsHandlers = {
 
     const edition = store.getEdition(tenant.id, editionId);
     if (!edition) return c.json({ error: 'edition_not_found' }, 404);
+    if (edition.status !== 'active') {
+      return c.json(
+        {
+          error: 'edition_not_playable',
+          status: edition.status
+        },
+        409
+      );
+    }
+
+    const lookup = getGameByEdition(tenant.id, editionId);
+    if (!lookup) return c.json({ error: 'edition_game_not_found' }, 404);
+
+    if (lookup.game.lifecycle === 'playtest') {
+      const maxUniquePlayers = GAME_LIFECYCLE_POLICY.playtest.maxUniquePlayers;
+      if (maxUniquePlayers !== null) {
+        const currentUniquePlayers = store.countUniquePlayersByGame(tenant.id, lookup.game.id);
+        const hasPlayedGame = store.hasPlayerSessionForGame(tenant.id, player.playerId, lookup.game.id);
+
+        if (!hasPlayedGame && currentUniquePlayers >= maxUniquePlayers) {
+          return c.json(
+            {
+              error: 'playtest_capacity_reached',
+              max_unique_players: maxUniquePlayers,
+              current_unique_players: currentUniquePlayers
+            },
+            403
+          );
+        }
+      }
+    }
 
     const created = store.createSession(tenant.id, player.playerId, editionId);
     if (created.existing) {
-      return c.json({ error: 'session_exists', existing_session: created.existing }, 409);
+      return c.json(
+        {
+          error: 'session_exists',
+          existing_session: presentSession(created.existing, store.getSessionResponses(tenant.id, created.existing.id))
+        },
+        409
+      );
     }
 
     return c.json({ session_id: created.created!.id, started_at: created.created!.startedAt }, 201);
@@ -47,7 +82,7 @@ export const sessionsHandlers = {
     }
 
     const responses = store.getSessionResponses(tenant.id, id);
-    return c.json({ ...session, responses });
+    return c.json(presentSession(session, responses));
   },
 
   respond(c: any) {
@@ -160,7 +195,7 @@ export const sessionsHandlers = {
     const rounds = store.listRounds(tenant.id, session.editionId);
     const responses = store.getSessionResponses(tenant.id, sessionId);
     const score = responses.reduce((sum, response) => sum + response.score, 0);
-    const maxScore = rounds.length;
+    const maxScore = getSessionMaxScore(lookup.game, rounds);
 
     const player = store.getPlayer(tenant.id, playerAuth.playerId);
     if (!player) return c.json({ error: 'player_not_found' }, 404);

@@ -13,7 +13,7 @@
     "typecheck": "npm run typecheck -w @puzzlebox/shared && npm run typecheck -w @puzzlebox/sdk && npm run typecheck -w @puzzlebox/db && npm run typecheck -w @puzzlebox/api && npm run typecheck -w @puzzlebox/web && npm run typecheck -w @puzzlebox/sheets-sync && npm run typecheck -w @puzzlebox/docs",
     "test": "npm run -ws test",
     "lint": "npm run -ws lint",
-    "openapi:baseline": "node scripts/generate-openapi-baseline.mjs",
+    "openapi:baseline": "npm run build -w @puzzlebox/shared && npm exec -w @puzzlebox/api tsx ../../scripts/generate-openapi-baseline.ts",
     "timeline:render": "node scripts/render-master-log-timeline.mjs",
     "docs:dev": "npm run dev -w @puzzlebox/docs",
     "docs:build": "npm run build -w @puzzlebox/docs",

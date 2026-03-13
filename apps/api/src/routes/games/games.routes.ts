@@ -1,17 +1,15 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import type { OpenAPIHono } from '@hono/zod-openapi';
+import {
+  apiErrorSchema,
+  createGameRequestSchema,
+  gameSchema,
+  gamesListResponseSchema,
+  patchGameRequestSchema,
+  todayResponseSchema
+} from '../../lib/api-schemas';
 import { readHeavyRateLimitMiddleware } from '../../middleware/rate-limit';
 import { gamesHandlers } from './games.handlers';
-
-const gameConfigSchema = z.object({
-  rounds_per_edition: z.number().int().min(1).max(25),
-  partial_credit: z.boolean(),
-  share_emoji_correct: z.string(),
-  share_emoji_incorrect: z.string(),
-  share_emoji_game: z.string(),
-  share_url_template: z.string(),
-  allow_anonymous: z.boolean()
-});
 
 export function registerGamesRoutes(app: OpenAPIHono<any>) {
   app.use('/api/v1/games', readHeavyRateLimitMiddleware);
@@ -25,7 +23,7 @@ export function registerGamesRoutes(app: OpenAPIHono<any>) {
           description: 'List games',
           content: {
             'application/json': {
-              schema: z.object({ games: z.array(z.any()) })
+              schema: gamesListResponseSchema
             }
           }
         }
@@ -42,12 +40,7 @@ export function registerGamesRoutes(app: OpenAPIHono<any>) {
         body: {
           content: {
             'application/json': {
-              schema: z.object({
-                name: z.string(),
-                slug: z.string(),
-                mode: z.enum(['pick_one', 'ordered_sequence', 'survey']),
-                config: gameConfigSchema
-              })
+              schema: createGameRequestSchema
             }
           }
         }
@@ -57,7 +50,15 @@ export function registerGamesRoutes(app: OpenAPIHono<any>) {
           description: 'Game created',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: gameSchema
+            }
+          }
+        },
+        409: {
+          description: 'Game slug already exists for tenant',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -78,7 +79,15 @@ export function registerGamesRoutes(app: OpenAPIHono<any>) {
           description: 'Game detail',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: gameSchema
+            }
+          }
+        },
+        404: {
+          description: 'Game not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -96,11 +105,7 @@ export function registerGamesRoutes(app: OpenAPIHono<any>) {
         body: {
           content: {
             'application/json': {
-              schema: z.object({
-                name: z.string().optional(),
-                active: z.boolean().optional(),
-                config: gameConfigSchema.partial().optional()
-              })
+              schema: patchGameRequestSchema
             }
           }
         }
@@ -110,7 +115,15 @@ export function registerGamesRoutes(app: OpenAPIHono<any>) {
           description: 'Game patched',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: gameSchema
+            }
+          }
+        },
+        404: {
+          description: 'Game not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -134,6 +147,14 @@ export function registerGamesRoutes(app: OpenAPIHono<any>) {
               schema: z.object({ id: z.string().uuid(), active: z.boolean() })
             }
           }
+        },
+        404: {
+          description: 'Game not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
+            }
+          }
         }
       }
     }),
@@ -152,7 +173,15 @@ export function registerGamesRoutes(app: OpenAPIHono<any>) {
           description: 'Today edition for a game',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: todayResponseSchema
+            }
+          }
+        },
+        404: {
+          description: 'No active edition for today',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }

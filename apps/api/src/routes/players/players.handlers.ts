@@ -1,4 +1,5 @@
 import { requireAdmin, requirePlayer } from '../../lib/authz';
+import { presentPlayer } from '../../lib/presenters';
 import { store } from '../../lib/store';
 
 export const playersHandlers = {
@@ -7,7 +8,7 @@ export const playersHandlers = {
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
-    return c.json({ players: store.listPlayers(tenant.id) });
+    return c.json({ players: store.listPlayers(tenant.id).map(presentPlayer) });
   },
 
   getPlayer(c: any) {
@@ -19,7 +20,7 @@ export const playersHandlers = {
     const player = store.getPlayer(tenant.id, id);
     if (!player) return c.json({ error: 'not_found' }, 404);
 
-    return c.json(player);
+    return c.json(presentPlayer(player));
   },
 
   deletePlayer(c: any) {
@@ -81,6 +82,6 @@ export const playersHandlers = {
     });
 
     if (!updated) return c.json({ error: 'not_found' }, 404);
-    return c.json(updated);
+    return c.json(presentPlayer(updated));
   }
 };

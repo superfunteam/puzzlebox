@@ -74,6 +74,10 @@ export const store = {
     return findTenantBySlug(slug);
   },
 
+  getTenant(tenantId: string) {
+    return tenants.get(tenantId) ?? null;
+  },
+
   validateApiKey(tenantId: string, key: string): ApiKeyRecord | null {
     return apiKeys.get(`${tenantId}:${key}`) ?? null;
   },
@@ -202,7 +206,13 @@ export const store = {
     return record;
   },
 
-  createGame(tenantId: string, input: { name: string; slug: string; mode: Game['mode']; config: GameConfig }): Game {
+  createGame(tenantId: string, input: {
+    name: string;
+    slug: string;
+    mode: Game['mode'];
+    lifecycle: Game['lifecycle'];
+    config: GameConfig;
+  }): Game {
     const duplicate = Array.from(games.values()).find((game) => game.tenantId === tenantId && game.slug === input.slug);
     if (duplicate) throw new Error('game_slug_exists');
 
@@ -212,6 +222,7 @@ export const store = {
       name: input.name,
       slug: input.slug,
       mode: input.mode,
+      lifecycle: input.lifecycle,
       config: input.config,
       active: true,
       createdAt: nowIso(),
@@ -231,7 +242,13 @@ export const store = {
     return Array.from(games.values()).find((game) => game.tenantId === tenantId && game.slug === slug) ?? null;
   },
 
-  patchGame(tenantId: string, slug: string, patch: Partial<Pick<Game, 'name' | 'active' | 'config'>>): Game | null {
+  getGameById(tenantId: string, gameId: string): Game | null {
+    const game = games.get(gameId) ?? null;
+    if (!game || game.tenantId !== tenantId) return null;
+    return game;
+  },
+
+  patchGame(tenantId: string, slug: string, patch: Partial<Pick<Game, 'name' | 'active' | 'config' | 'lifecycle'>>): Game | null {
     const game = this.getGameBySlug(tenantId, slug);
     if (!game) return null;
 
@@ -239,6 +256,7 @@ export const store = {
       ...game,
       name: patch.name ?? game.name,
       active: patch.active ?? game.active,
+      lifecycle: patch.lifecycle ?? game.lifecycle,
       config: patch.config ?? game.config,
       updatedAt: nowIso()
     };
@@ -311,6 +329,14 @@ export const store = {
     const edition = editions.get(editionId) ?? null;
     if (!edition || edition.tenantId !== tenantId) return null;
     return edition;
+  },
+
+  getGameByEdition(tenantId: string, editionId: string): { game: Game; edition: Edition } | null {
+    const edition = this.getEdition(tenantId, editionId);
+    if (!edition) return null;
+    const game = this.getGameById(tenantId, edition.gameId);
+    if (!game) return null;
+    return { game, edition };
   },
 
   patchEdition(
@@ -412,6 +438,39 @@ export const store = {
     };
     sessions.set(session.id, session);
     return { created: session, existing: null };
+  },
+
+  countUniquePlayersByGame(tenantId: string, gameId: string): number {
+    const editionIds = new Set(
+      Array.from(editions.values())
+        .filter((edition) => edition.tenantId === tenantId && edition.gameId === gameId)
+        .map((edition) => edition.id)
+    );
+
+    if (editionIds.size === 0) return 0;
+
+    return new Set(
+      Array.from(sessions.values())
+        .filter((session) => session.tenantId === tenantId && editionIds.has(session.editionId))
+        .map((session) => session.playerId)
+    ).size;
+  },
+
+  hasPlayerSessionForGame(tenantId: string, playerId: string, gameId: string): boolean {
+    const editionIds = new Set(
+      Array.from(editions.values())
+        .filter((edition) => edition.tenantId === tenantId && edition.gameId === gameId)
+        .map((edition) => edition.id)
+    );
+
+    if (editionIds.size === 0) return false;
+
+    return Array.from(sessions.values()).some(
+      (session) =>
+        session.tenantId === tenantId &&
+        session.playerId === playerId &&
+        editionIds.has(session.editionId)
+    );
   },
 
   getSession(tenantId: string, sessionId: string): Session | null {

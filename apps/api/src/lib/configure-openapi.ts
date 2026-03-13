@@ -1,14 +1,9 @@
 import { apiReference } from '@scalar/hono-api-reference';
 import type { OpenAPIHono } from '@hono/zod-openapi';
+import { openApiDocument } from './openapi-document';
 
 export function configureOpenApi(app: OpenAPIHono<any>) {
-  app.doc('/doc', {
-    openapi: '3.1.0',
-    info: {
-      title: 'Puzzlebox API',
-      version: '0.1.0'
-    }
-  });
+  app.doc31('/doc', openApiDocument);
 
   app.get('/reference', apiReference({
     theme: 'elysiajs',

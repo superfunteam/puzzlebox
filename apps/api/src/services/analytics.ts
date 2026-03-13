@@ -1,4 +1,5 @@
 import { store } from '../lib/store';
+import { dateInTimezone } from '../lib/time';
 
 function safeDivide(numerator: number, denominator: number): number {
   if (denominator === 0) return 0;
@@ -7,8 +8,10 @@ function safeDivide(numerator: number, denominator: number): number {
 
 export function getOverview(tenantId: string) {
   const sessions = store.listSessionsByTenant(tenantId);
-  const today = new Date().toISOString().slice(0, 10);
-  const todaySessions = sessions.filter((session) => session.startedAt.startsWith(today));
+  const tenant = store.getTenant(tenantId);
+  const timezone = tenant?.timezone ?? 'UTC';
+  const today = dateInTimezone(new Date(), timezone);
+  const todaySessions = sessions.filter((session) => dateInTimezone(new Date(session.startedAt), timezone) === today);
   const uniquePlayers = new Set(todaySessions.map((session) => session.playerId));
 
   return {

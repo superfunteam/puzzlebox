@@ -1,8 +1,33 @@
 # Puzzlebox
 
-Open-source middleware for daily-play games for newsrooms.
+Puzzlebox is agent-first middleware for daily-play games. It gives you the reusable backend loop so a new game mostly becomes content, frontend UX, and editorial workflow.
 
-## Quickstart
+## Start Here If You’re Handing This Repo To An Agent
+
+Point the agent at these files first:
+
+- `apps/docs/docs/agent-quickstart.md`
+- `apps/docs/docs/game-spec-template.md`
+- `apps/docs/docs/quickstart.md`
+
+Those three docs are the shortest path from “here is my game idea” to “here is a working Puzzlebox-backed game.”
+
+Concrete example handoffs already in the repo:
+
+- `docs/Drift-Playtest-Agent-Handoff.md`
+- `docs/Heatmap-Playtest-Agent-Handoff.md`
+
+## What Puzzlebox Handles
+
+- tenant scoping,
+- game + edition + round primitives,
+- session creation and resume,
+- server-side answer validation,
+- streaks and share payloads,
+- analytics endpoints,
+- a typed SDK and OpenAPI contract.
+
+## Quick Local Boot
 
 ```bash
 cp .env.example .env
@@ -11,20 +36,28 @@ npm run build
 npm run start -w @puzzlebox/api
 ```
 
-API docs:
+Useful URLs:
+
 - OpenAPI JSON: `http://localhost:3000/doc`
-- Scalar reference: `http://localhost:3000/reference`
+- Interactive API docs: `http://localhost:3000/reference`
+- Docs site: `npm run docs:dev`
 
-## Monorepo layout
+## Repo Layout
 
-- `apps/api`: Hono API
-- `apps/web`: React reference app
-- `packages/db`: Drizzle schema and migrations
-- `packages/shared`: shared constants/types/schemas
-- `packages/sdk`: TypeScript API client
-- `tools/sheets-sync`: Sheets ingestion helper
-- `ops/master-log.ndjson`: append-only build/task log
+- `apps/api`: Hono API and OpenAPI surface
+- `apps/web`: reference playable client
+- `apps/docs`: docs site and agent handoff docs
+- `packages/shared`: shared enums, types, config helpers
+- `packages/sdk`: typed TypeScript client
+- `packages/db`: Drizzle schema package
+- `tools/sheets-sync`: editorial ingestion helper
 
-## Status
+## Contract Snapshot
 
-Initial implementation scaffold and core API routes are included. See `ops/master-log.ndjson` for task/event history.
+Generate the checked-in OpenAPI baseline with:
+
+```bash
+npm run openapi:baseline
+```
+
+This now produces the real generated OpenAPI 3.1 document rather than an empty placeholder.

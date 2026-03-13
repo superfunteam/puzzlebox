@@ -1,5 +1,11 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import type { OpenAPIHono } from '@hono/zod-openapi';
+import {
+  analyticsOverviewSchema,
+  apiErrorSchema,
+  editionAnalyticsSchema,
+  gameAnalyticsSchema
+} from '../../lib/api-schemas';
 import { analyticsHandlers } from './analytics.handlers';
 
 export function registerAnalyticsRoutes(app: OpenAPIHono<any>) {
@@ -12,7 +18,7 @@ export function registerAnalyticsRoutes(app: OpenAPIHono<any>) {
           description: 'Overview analytics',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: analyticsOverviewSchema
             }
           }
         }
@@ -33,7 +39,15 @@ export function registerAnalyticsRoutes(app: OpenAPIHono<any>) {
           description: 'Game analytics',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: gameAnalyticsSchema
+            }
+          }
+        },
+        404: {
+          description: 'Game not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -54,7 +68,15 @@ export function registerAnalyticsRoutes(app: OpenAPIHono<any>) {
           description: 'Edition analytics',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: editionAnalyticsSchema
+            }
+          }
+        },
+        404: {
+          description: 'Edition not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }

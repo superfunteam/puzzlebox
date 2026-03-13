@@ -1,3 +1,5 @@
+import type { Game, Round } from '@puzzlebox/shared';
+
 export interface ScoringResult {
   isCorrect: boolean | null;
   score: number;
@@ -32,4 +34,21 @@ export function scoreSurvey(): ScoringResult {
     isCorrect: null,
     score: 1
   };
+}
+
+function getOrderedSequenceMaxScore(round: Round): number {
+  const order = round.correctAnswer?.order;
+  return Array.isArray(order) && order.length > 0 ? order.length : 1;
+}
+
+export function getRoundMaxScore(game: Game, round: Round): number {
+  if (game.mode === 'ordered_sequence' && game.config.partialCredit) {
+    return getOrderedSequenceMaxScore(round);
+  }
+
+  return 1;
+}
+
+export function getSessionMaxScore(game: Game, rounds: Round[]): number {
+  return rounds.reduce((sum, round) => sum + getRoundMaxScore(game, round), 0);
 }

@@ -1,47 +1,67 @@
 # Sessions & Gameplay API
 
-Sessions enforce one-attempt-per-player-per-edition and idempotent per-round responses.
+Sessions represent one player attempting one edition. They are the backbone of the daily gameplay loop.
 
 ## Endpoints
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /sessions` | Start edition session |
-| `GET /sessions/{id}` | Inspect in-progress session state |
+| `POST /sessions` | Start an edition session |
+| `GET /sessions/{id}` | Inspect current session state |
 | `POST /sessions/{id}/respond` | Submit and validate a round answer |
 | `POST /sessions/{id}/complete` | Finalize score, streak, and share payload |
 
-## Gameplay loop
+## Session Start Rules
 
-1. Fetch `GET /games/{slug}/today`.
-2. Start with `POST /sessions`.
-3. Respond per round via `POST /sessions/{id}/respond`.
-4. Complete with `POST /sessions/{id}/complete`.
+`POST /sessions` only succeeds when:
 
-## Response validation by mode
+- the edition exists,
+- the edition is `active`,
+- the player has not already started that edition,
+- the game has not exceeded playtest capacity.
+
+Possible non-201 responses:
+
+- `session_exists`: includes a full `existing_session` payload for resume.
+- `edition_not_playable`: the edition is `draft`, `scheduled`, or `archived`.
+- `playtest_capacity_reached`: a new player exceeded the free playtest cap.
+
+## Resume Model
+
+Frontend agents should treat resume as normal behavior:
+
+1. Call `GET /games/{slug}/today`.
+2. If `existing_session` is present, resume it.
+3. If not, call `POST /sessions`.
+4. If `POST /sessions` returns `session_exists`, resume that payload instead of failing.
+
+## Response Validation By Mode
 
 ### `pick_one`
+
 - Input: `{ "key": "a" }`
-- Returns correctness + correct answer + round metadata.
+- Returns correctness, score, correct answer, and optional metadata.
 
 ### `ordered_sequence`
+
 - Input: `{ "order": ["c","a","d","b"] }`
-- Returns per-position correctness and partial score.
+- Returns correctness, partial score, and `positions_correct`.
+
+When partial credit is enabled, `max_score` is derived from the number of positions in the correct order array.
 
 ### `survey`
-- Input: `{ "key": "b" }`
-- Returns distribution and total response counts.
 
-## Completion output
+- Input: `{ "key": "b" }`
+- Returns crowd distribution instead of correctness.
+
+## Completion Output
 
 `POST /sessions/{id}/complete` returns:
 
-- `score` + `max_score`
-- `streak` object
-- `share_data` with server-formatted share text
+- `score`
+- `max_score`
+- `duration_seconds`
+- `streak`
+- `share_data`
 
-## Time + streak behavior
-
-- Streaks are computed server-side.
-- Player timezone is preferred; tenant timezone is fallback.
-- Grace windows and freeze consumption apply during streak updates.
+Frontends should render `share_data.share_text` directly instead of rebuilding share copy client-side.

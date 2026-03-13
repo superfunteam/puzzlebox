@@ -1,3 +1,5 @@
+import type { CreateEditionRequest } from '@puzzlebox/sdk';
+
 export interface PickOneRow {
   edition_date: string;
   position: string;
@@ -35,7 +37,7 @@ export interface SurveyRow {
   option_d?: string;
 }
 
-export function pickOneRowsToEditionPayload(rows: PickOneRow[]) {
+export function pickOneRowsToEditionPayload(rows: PickOneRow[]): CreateEditionRequest {
   const firstRow = rows.at(0);
   if (!firstRow) throw new Error('no_rows');
   const editionDate = firstRow.edition_date;
@@ -66,7 +68,7 @@ export function pickOneRowsToEditionPayload(rows: PickOneRow[]) {
   };
 }
 
-export function orderedRowsToEditionPayload(rows: OrderedRow[]) {
+export function orderedRowsToEditionPayload(rows: OrderedRow[]): CreateEditionRequest {
   const firstRow = rows.at(0);
   if (!firstRow) throw new Error('no_rows');
   const editionDate = firstRow.edition_date;
@@ -101,7 +103,7 @@ export function orderedRowsToEditionPayload(rows: OrderedRow[]) {
   };
 }
 
-export function surveyRowsToEditionPayload(rows: SurveyRow[]) {
+export function surveyRowsToEditionPayload(rows: SurveyRow[]): CreateEditionRequest {
   const firstRow = rows.at(0);
   if (!firstRow) throw new Error('no_rows');
   const editionDate = firstRow.edition_date;

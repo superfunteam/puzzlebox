@@ -1,6 +1,6 @@
 # Games API
 
-Games are tenant-scoped containers that define mode + config for daily editions.
+Games define the stable rules of a title: mode, lifecycle, config, and policy.
 
 ## Endpoints
 
@@ -11,33 +11,44 @@ Games are tenant-scoped containers that define mode + config for daily editions.
 | `GET /games/{slug}` | API key | Fetch game config |
 | `PATCH /games/{slug}` | API key | Update metadata/config |
 | `DELETE /games/{slug}` | API key | Soft delete (`active=false`) |
-| `GET /games/{slug}/today` | Player JWT | Fetch active edition without correct answers |
+| `GET /games/{slug}/today` | Player JWT | Frontend bootstrap payload |
 
-## Create game payload
+## Important Fields
+
+- `mode`: `pick_one`, `ordered_sequence`, or `survey`
+- `lifecycle`: `playtest` or `production`
+- `policy`: derived server-side from `lifecycle`
+
+## Patch Behavior
+
+`PATCH /games/{slug}` accepts partial config updates.
+
+That means this is valid:
 
 ```json
 {
-  "name": "Who Says?",
-  "slug": "who-says",
-  "mode": "pick_one",
   "config": {
-    "rounds_per_edition": 5,
-    "partial_credit": true,
-    "share_emoji_correct": "🟩",
-    "share_emoji_incorrect": "🟥",
-    "share_emoji_game": "🎙️",
-    "share_url_template": "https://play.twts.org/{slug}",
-    "allow_anonymous": true
+    "share_url_template": "https://games.example.com/{slug}"
   }
 }
 ```
 
+Unspecified config fields are preserved.
+
 ## `GET /games/{slug}/today`
 
-Returns:
+This is the main client bootstrap payload. It returns:
 
-- Edition metadata
-- Round prompts/options (no `correct_answer`)
-- Existing session context if already started
+- edition metadata for the current tenant-local day,
+- public round data without `correct_answer`,
+- the game lifecycle + policy,
+- `existing_session` when the player has already started.
 
-This endpoint is the primary frontend bootstrap request.
+Agents building frontends should begin here, not by stitching multiple admin endpoints together.
+
+## Lifecycle Notes
+
+- `playtest`: capped to 20 unique players per game.
+- `production`: no unique-player cap.
+
+The lifecycle is also exposed as `policy` so the frontend or admin tooling can branch without hard-coding business rules.

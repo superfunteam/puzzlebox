@@ -1,5 +1,13 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import type { OpenAPIHono } from '@hono/zod-openapi';
+import {
+  apiErrorSchema,
+  deleteResponseSchema,
+  patchMeRequestSchema,
+  playerListResponseSchema,
+  playerSchema,
+  playerStatsSchema
+} from '../../lib/api-schemas';
 import { readHeavyRateLimitMiddleware } from '../../middleware/rate-limit';
 import { playersHandlers } from './players.handlers';
 
@@ -15,7 +23,7 @@ export function registerPlayersRoutes(app: OpenAPIHono<any>) {
           description: 'List players',
           content: {
             'application/json': {
-              schema: z.object({ players: z.array(z.any()) })
+              schema: playerListResponseSchema
             }
           }
         }
@@ -34,7 +42,15 @@ export function registerPlayersRoutes(app: OpenAPIHono<any>) {
           description: 'Get player',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: playerSchema
+            }
+          }
+        },
+        404: {
+          description: 'Player not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -53,7 +69,15 @@ export function registerPlayersRoutes(app: OpenAPIHono<any>) {
           description: 'Delete player',
           content: {
             'application/json': {
-              schema: z.object({ id: z.string().uuid(), deleted: z.boolean() })
+              schema: deleteResponseSchema
+            }
+          }
+        },
+        404: {
+          description: 'Player not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -71,7 +95,7 @@ export function registerPlayersRoutes(app: OpenAPIHono<any>) {
           description: 'Player stats',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: playerStatsSchema
             }
           }
         }
@@ -88,10 +112,7 @@ export function registerPlayersRoutes(app: OpenAPIHono<any>) {
         body: {
           content: {
             'application/json': {
-              schema: z.object({
-                timezone: z.string().optional(),
-                display_name: z.string().optional()
-              })
+              schema: patchMeRequestSchema
             }
           }
         }
@@ -101,7 +122,15 @@ export function registerPlayersRoutes(app: OpenAPIHono<any>) {
           description: 'Player patched',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: playerSchema
+            }
+          }
+        },
+        404: {
+          description: 'Player not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }

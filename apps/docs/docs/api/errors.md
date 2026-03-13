@@ -1,8 +1,8 @@
 # Error Model
 
-Puzzlebox returns JSON errors with consistent semantics.
+Puzzlebox returns JSON errors with a consistent `error` string.
 
-## Typical error payload
+## Typical Error Payload
 
 ```json
 {
@@ -10,7 +10,7 @@ Puzzlebox returns JSON errors with consistent semantics.
 }
 ```
 
-Validation failures may include details:
+Validation failures include structured issues:
 
 ```json
 {
@@ -21,26 +21,33 @@ Validation failures may include details:
 }
 ```
 
-## Common API errors
+## Common Errors
 
-| Code | Meaning |
+| Error | Meaning |
 |---|---|
 | `missing_tenant` | Missing `X-Tenant` header |
 | `unknown_tenant` | Tenant slug not found |
 | `missing_api_key` | Missing admin key |
 | `invalid_api_key` | Key not valid for tenant |
 | `missing_bearer_token` | Missing JWT bearer token |
-| `invalid_token` | Invalid/expired JWT |
+| `invalid_token` | Invalid or expired JWT |
 | `tenant_mismatch` | Token tenant does not match request tenant |
-| `session_exists` | Attempt to create duplicate session |
-| `edition_exists` | Duplicate `(game, edition_date)` publish attempt |
+| `game_slug_exists` | Duplicate game slug inside the tenant |
+| `edition_exists` | Duplicate `(game, edition_date)` edition |
+| `round_count_mismatch` | Edition round count does not match game config |
+| `session_exists` | Player already started that edition |
+| `edition_not_playable` | Tried to start a session for a non-active edition |
+| `playtest_capacity_reached` | Playtest game reached the unique-player cap |
 
-## HTTP status guidance
+## HTTP Status Guidance
 
-- `400`: malformed request preconditions
-- `401`: missing/invalid authentication
-- `403`: authenticated but unauthorized for tenant/object
+- `401`: missing or invalid authentication
+- `403`: authenticated but not allowed for that tenant/object
 - `404`: resource not found in tenant scope
-- `409`: conflict with uniqueness/idempotency constraints
+- `409`: idempotency or state conflict
 - `422`: semantic validation failure
 - `429`: rate limiting
+
+## Agent Guidance
+
+Do not treat `session_exists` as a failure state for frontends. It is the server telling you to resume.

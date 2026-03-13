@@ -1,16 +1,19 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import type { OpenAPIHono } from '@hono/zod-openapi';
+import {
+  apiErrorSchema,
+  createEditionRequestSchema,
+  createEditionResponseSchema,
+  deleteResponseSchema,
+  editionDetailSchema,
+  editionListResponseSchema,
+  editionSchema,
+  optionSchema,
+  patchEditionRequestSchema,
+  roundAdminSchema,
+  roundPatchRequestSchema
+} from '../../lib/api-schemas';
 import { editionsHandlers } from './editions.handlers';
-
-const optionSchema = z.object({ key: z.string(), label: z.string() });
-
-const roundPayloadSchema = z.object({
-  position: z.number().int().min(1),
-  prompt: z.string(),
-  options: z.array(optionSchema).min(2),
-  correct_answer: z.record(z.string(), z.unknown()).nullable(),
-  metadata: z.record(z.string(), z.unknown()).nullable().optional()
-});
 
 export function registerEditionsRoutes(app: OpenAPIHono<any>) {
   app.openapi(
@@ -22,13 +25,7 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
         body: {
           content: {
             'application/json': {
-              schema: z.object({
-                edition_date: z.string(),
-                status: z.enum(['draft', 'scheduled', 'active', 'archived']),
-                publish_at: z.string().nullable().optional(),
-                metadata: z.record(z.string(), z.unknown()).nullable().optional(),
-                rounds: z.array(roundPayloadSchema)
-              })
+              schema: createEditionRequestSchema
             }
           }
         }
@@ -38,7 +35,31 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Edition created',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: createEditionResponseSchema
+            }
+          }
+        },
+        404: {
+          description: 'Game not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
+            }
+          }
+        },
+        409: {
+          description: 'Edition already exists for this game and date',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
+            }
+          }
+        },
+        422: {
+          description: 'Edition payload violates game invariants',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -59,7 +80,15 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Edition list',
           content: {
             'application/json': {
-              schema: z.object({ editions: z.array(z.any()) })
+              schema: editionListResponseSchema
+            }
+          }
+        },
+        404: {
+          description: 'Game not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -80,7 +109,15 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Edition detail',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: editionDetailSchema
+            }
+          }
+        },
+        404: {
+          description: 'Edition not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -98,11 +135,7 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
         body: {
           content: {
             'application/json': {
-              schema: z.object({
-                status: z.enum(['draft', 'scheduled', 'active', 'archived']).optional(),
-                publish_at: z.string().nullable().optional(),
-                metadata: z.record(z.string(), z.unknown()).nullable().optional()
-              })
+              schema: patchEditionRequestSchema
             }
           }
         }
@@ -112,7 +145,15 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Edition patched',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: editionSchema
+            }
+          }
+        },
+        404: {
+          description: 'Edition not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -131,7 +172,15 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Edition published',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: editionSchema
+            }
+          }
+        },
+        404: {
+          description: 'Edition not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -150,7 +199,15 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Edition archived',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: editionSchema
+            }
+          }
+        },
+        404: {
+          description: 'Edition not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -171,7 +228,15 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Round list',
           content: {
             'application/json': {
-              schema: z.object({ rounds: z.array(z.any()) })
+              schema: z.object({ rounds: z.array(roundAdminSchema) })
+            }
+          }
+        },
+        404: {
+          description: 'Edition not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -189,12 +254,7 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
         body: {
           content: {
             'application/json': {
-              schema: z.object({
-                prompt: z.string().optional(),
-                options: z.array(optionSchema).optional(),
-                correct_answer: z.record(z.string(), z.unknown()).nullable().optional(),
-                metadata: z.record(z.string(), z.unknown()).nullable().optional()
-              })
+              schema: roundPatchRequestSchema
             }
           }
         }
@@ -204,7 +264,23 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Round patched',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: roundAdminSchema
+            }
+          }
+        },
+        404: {
+          description: 'Round not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
+            }
+          }
+        },
+        409: {
+          description: 'Round can only be changed while edition is in draft',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -225,7 +301,23 @@ export function registerEditionsRoutes(app: OpenAPIHono<any>) {
           description: 'Round deleted',
           content: {
             'application/json': {
-              schema: z.object({ id: z.string().uuid(), deleted: z.boolean() })
+              schema: deleteResponseSchema
+            }
+          }
+        },
+        404: {
+          description: 'Round not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
+            }
+          }
+        },
+        409: {
+          description: 'Round can only be changed while edition is in draft',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }

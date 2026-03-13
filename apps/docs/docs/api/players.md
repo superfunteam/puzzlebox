@@ -1,49 +1,39 @@
 # Players API
 
-Player APIs cover profile data, personal stats, and deletion for privacy compliance.
+Player APIs cover profile data, deletion, and cross-game stats.
 
-## Admin endpoints (API key)
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /players` | Tenant-scoped player list |
-| `GET /players/{id}` | Player detail lookup |
-| `DELETE /players/{id}` | GDPR/CCPA deletion of player and dependent records |
-
-## Player endpoints (JWT)
+## Admin Endpoints
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /me/stats` | Cross-game stats for current player |
+| `GET /players` | List tenant players |
+| `GET /players/{id}` | Fetch one player |
+| `DELETE /players/{id}` | Delete player and dependent records |
+
+## Player Endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /me/stats` | Cross-game stats for the current player |
 | `PATCH /me` | Update timezone/display name |
 
-## `GET /me/stats` response shape
+## Response Notes
 
-```json
-{
-  "player_id": "uuid",
-  "games": [
-    {
-      "game_slug": "who-says",
-      "total_sessions": 45,
-      "current_streak": 12,
-      "longest_streak": 23,
-      "average_score_pct": 0.78,
-      "last_played": "2026-02-14",
-      "freezes_remaining": 2
-    }
-  ]
-}
-```
+Player responses are normalized to external `snake_case`:
 
-## Deletion behavior
+- `auth_method`
+- `external_id`
+- `display_name`
+- `created_at`
 
-`DELETE /players/{id}` removes:
+Internal-only fields such as anonymous tokens are not part of the external API surface.
 
-- Player profile
-- Sessions
-- Responses
-- Streak records
-- Related derived state
+## `GET /me/stats`
 
-This endpoint is tenant-scoped and object-authorized.
+This endpoint is useful for profile pages and retention surfaces. It aggregates:
+
+- total sessions per game,
+- current and longest streak,
+- average score percentage,
+- last played date,
+- remaining freezes.

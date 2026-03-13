@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { PuzzleboxClient } from '@puzzlebox/sdk';
+import { PuzzleboxClient, type CreateEditionRequest } from '@puzzlebox/sdk';
 import {
   orderedRowsToEditionPayload,
   pickOneRowsToEditionPayload,
@@ -60,7 +60,7 @@ async function main() {
 
   const rows = readRows(config.rowsFile);
 
-  let payload: Record<string, unknown>;
+  let payload: CreateEditionRequest;
   if (config.mode === 'pick_one') {
     payload = pickOneRowsToEditionPayload(asPickOneRows(rows));
   } else if (config.mode === 'ordered_sequence') {

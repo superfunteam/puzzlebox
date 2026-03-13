@@ -1,4 +1,5 @@
 import { requireAdmin } from '../../lib/authz';
+import { presentEdition, presentRound } from '../../lib/presenters';
 import { store } from '../../lib/store';
 
 function assertRoundCount(rounds: unknown[], expected: number) {
@@ -71,7 +72,7 @@ export const editionsHandlers = {
     const game = store.getGameBySlug(tenant.id, slug);
     if (!game) return c.json({ error: 'game_not_found' }, 404);
 
-    return c.json({ editions: store.listEditionsByGame(tenant.id, game.id) });
+    return c.json({ editions: store.listEditionsByGame(tenant.id, game.id).map(presentEdition) });
   },
 
   getEdition(c: any) {
@@ -83,7 +84,10 @@ export const editionsHandlers = {
     const edition = store.getEdition(tenant.id, id);
     if (!edition) return c.json({ error: 'not_found' }, 404);
 
-    return c.json({ ...edition, rounds: store.listRounds(tenant.id, edition.id) });
+    return c.json({
+      ...presentEdition(edition),
+      rounds: store.listRounds(tenant.id, edition.id).map((round) => presentRound(round, { includeCorrectAnswer: true }))
+    });
   },
 
   patchEdition(c: any) {
@@ -101,7 +105,7 @@ export const editionsHandlers = {
     });
 
     if (!edition) return c.json({ error: 'not_found' }, 404);
-    return c.json(edition);
+    return c.json(presentEdition(edition));
   },
 
   publishEdition(c: any) {
@@ -112,7 +116,7 @@ export const editionsHandlers = {
     const id = c.req.param('id');
     const edition = store.patchEdition(tenant.id, id, { status: 'active' });
     if (!edition) return c.json({ error: 'not_found' }, 404);
-    return c.json(edition);
+    return c.json(presentEdition(edition));
   },
 
   archiveEdition(c: any) {
@@ -123,7 +127,7 @@ export const editionsHandlers = {
     const id = c.req.param('id');
     const edition = store.patchEdition(tenant.id, id, { status: 'archived' });
     if (!edition) return c.json({ error: 'not_found' }, 404);
-    return c.json(edition);
+    return c.json(presentEdition(edition));
   },
 
   listRounds(c: any) {
@@ -135,7 +139,7 @@ export const editionsHandlers = {
     const edition = store.getEdition(tenant.id, id);
     if (!edition) return c.json({ error: 'not_found' }, 404);
 
-    return c.json({ rounds: store.listRounds(tenant.id, edition.id) });
+    return c.json({ rounds: store.listRounds(tenant.id, edition.id).map((round) => presentRound(round, { includeCorrectAnswer: true })) });
   },
 
   patchRound(c: any) {
@@ -161,7 +165,7 @@ export const editionsHandlers = {
       metadata: body.metadata
     });
 
-    return c.json(updated);
+    return c.json(presentRound(updated!, { includeCorrectAnswer: true }));
   },
 
   deleteRound(c: any) {

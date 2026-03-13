@@ -6,19 +6,24 @@ export default defineConfig({
   cleanUrls: true,
   themeConfig: {
     logo: '/logo-block.svg',
+    siteTitle: 'PuzzleBox',
     nav: [
+      { text: 'Agent Quickstart', link: '/agent-quickstart' },
+      { text: 'Game Spec', link: '/game-spec-template' },
       { text: 'Quickstart', link: '/quickstart' },
       { text: 'API', link: '/api/overview' },
-      { text: 'Architecture', link: '/architecture' },
       { text: 'SDK', link: '/sdk' }
     ],
     sidebar: [
       {
-        text: 'Get Started',
+        text: 'Agent Build',
         items: [
           { text: 'Overview', link: '/' },
+          { text: 'Agent Quickstart', link: '/agent-quickstart' },
+          { text: 'Game Spec Template', link: '/game-spec-template' },
           { text: 'Quickstart', link: '/quickstart' },
-          { text: 'Architecture', link: '/architecture' }
+          { text: 'Architecture', link: '/architecture' },
+          { text: 'SDK', link: '/sdk' }
         ]
       },
       {
@@ -38,7 +43,6 @@ export default defineConfig({
       {
         text: 'Integrations',
         items: [
-          { text: 'SDK', link: '/sdk' },
           { text: 'Sheets Sync', link: '/sheets-sync' }
         ]
       }

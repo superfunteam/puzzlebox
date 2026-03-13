@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scoreOrderedSequence, scorePickOne, scoreSurvey } from '../services/scoring';
+import { getSessionMaxScore, scoreOrderedSequence, scorePickOne, scoreSurvey } from '../services/scoring';
 
 describe('scoring service', () => {
   it('scores pick_one', () => {
@@ -15,5 +15,49 @@ describe('scoring service', () => {
 
   it('scores survey as participation', () => {
     expect(scoreSurvey()).toEqual({ isCorrect: null, score: 1 });
+  });
+
+  it('derives session max score from ordered-sequence positions when partial credit is enabled', () => {
+    const maxScore = getSessionMaxScore(
+      {
+        id: 'game-id',
+        tenantId: 'tenant-id',
+        name: 'Drift',
+        slug: 'drift',
+        mode: 'ordered_sequence',
+        lifecycle: 'production',
+        config: {
+          roundsPerEdition: 1,
+          partialCredit: true,
+          shareEmojiCorrect: '🟩',
+          shareEmojiIncorrect: '🟥',
+          shareEmojiGame: '🧭',
+          shareUrlTemplate: 'https://example.com/{slug}',
+          allowAnonymous: true
+        },
+        active: true,
+        createdAt: '2026-02-14T00:00:00Z',
+        updatedAt: '2026-02-14T00:00:00Z'
+      },
+      [
+        {
+          id: 'round-id',
+          editionId: 'edition-id',
+          tenantId: 'tenant-id',
+          position: 1,
+          prompt: 'Sort these',
+          options: [
+            { key: 'a', label: 'Alpha' },
+            { key: 'b', label: 'Beta' },
+            { key: 'c', label: 'Gamma' }
+          ],
+          correctAnswer: { order: ['a', 'b', 'c'] },
+          metadata: null,
+          createdAt: '2026-02-14T00:00:00Z'
+        }
+      ]
+    );
+
+    expect(maxScore).toBe(3);
   });
 });

@@ -1,5 +1,17 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import type { OpenAPIHono } from '@hono/zod-openapi';
+import {
+  apiErrorSchema,
+  completeSessionResponseSchema,
+  editionNotPlayableSchema,
+  playtestCapacitySchema,
+  respondRequestSchema,
+  respondResponseSchema,
+  sessionExistsSchema,
+  sessionStateSchema,
+  startSessionRequestSchema,
+  startSessionResponseSchema
+} from '../../lib/api-schemas';
 import { respondRateLimitMiddleware } from '../../middleware/rate-limit';
 import { sessionsHandlers } from './sessions.handlers';
 
@@ -14,7 +26,7 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
         body: {
           content: {
             'application/json': {
-              schema: z.object({ edition_id: z.string().uuid() })
+              schema: startSessionRequestSchema
             }
           }
         }
@@ -24,15 +36,27 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
           description: 'Session created',
           content: {
             'application/json': {
-              schema: z.object({ session_id: z.string().uuid(), started_at: z.string() })
+              schema: startSessionResponseSchema
             }
           }
         },
         409: {
-          description: 'Session exists',
+          description: 'Session exists or edition is not currently playable',
           content: {
             'application/json': {
-              schema: z.object({ error: z.string(), existing_session: z.any() })
+              schema: z.union([sessionExistsSchema, editionNotPlayableSchema])
+            }
+          }
+        },
+        403: {
+          description: 'Playtest capacity reached',
+          content: {
+            'application/json': {
+              schema: z.object({
+                error: z.literal('playtest_capacity_reached'),
+                max_unique_players: z.number().int(),
+                current_unique_players: z.number().int()
+              })
             }
           }
         }
@@ -53,7 +77,15 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
           description: 'Session detail',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: sessionStateSchema
+            }
+          }
+        },
+        404: {
+          description: 'Session not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -71,10 +103,7 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
         body: {
           content: {
             'application/json': {
-              schema: z.object({
-                round_id: z.string().uuid(),
-                answer: z.record(z.string(), z.unknown())
-              })
+              schema: respondRequestSchema
             }
           }
         }
@@ -84,7 +113,23 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
           description: 'Round response accepted',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: respondResponseSchema
+            }
+          }
+        },
+        404: {
+          description: 'Session or edition not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
+            }
+          }
+        },
+        422: {
+          description: 'Answer or round validation failed',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
@@ -105,7 +150,15 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
           description: 'Session completed',
           content: {
             'application/json': {
-              schema: z.any()
+              schema: completeSessionResponseSchema
+            }
+          }
+        },
+        404: {
+          description: 'Session or player not found',
+          content: {
+            'application/json': {
+              schema: apiErrorSchema
             }
           }
         }
