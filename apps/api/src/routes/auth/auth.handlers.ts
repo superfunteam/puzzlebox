@@ -22,28 +22,29 @@ function playerToken(playerId: string, tenantSlug: string) {
 }
 
 export const authHandlers = {
-  magicLink(c: any) {
+  async magicLink(c: any) {
     const tenant = c.get('tenant');
     const { email } = c.req.valid('json');
-    const token = store.createMagicLink(tenant.id, email, getEnv().jwtTtlSeconds);
+    const env = getEnv();
+    const token = await store.createMagicLink(tenant.id, email, env.magicLinkTtlSeconds);
 
     return c.json({
       message: 'Check your email',
-      expires_in: 600,
+      expires_in: env.magicLinkTtlSeconds,
       token_preview: token
     });
   },
 
-  verify(c: any) {
+  async verify(c: any) {
     const tenant = c.get('tenant');
     const { token } = c.req.valid('json');
-    const record = store.consumeMagicLink(token);
+    const record = await store.consumeMagicLink(token);
 
     if (!record || record.tenantId !== tenant.id) {
       return c.json({ error: 'invalid_magic_link' }, 401);
     }
 
-    const player = store.createOrGetEmailPlayer(tenant.id, record.email, 'magic_link');
+    const player = await store.createOrGetEmailPlayer(tenant.id, record.email, 'magic_link');
     const tokenData = playerToken(player.id, tenant.slug);
 
     return c.json({
@@ -53,10 +54,10 @@ export const authHandlers = {
     });
   },
 
-  anonymous(c: any) {
+  async anonymous(c: any) {
     const tenant = c.get('tenant');
-    const body = c.req.valid('json') as { timezone?: string };
-    const player = store.createAnonymousPlayer(tenant.id, body.timezone ?? null);
+    const body = (c.req.valid('json') ?? {}) as { timezone?: string };
+    const player = await store.createAnonymousPlayer(tenant.id, body.timezone ?? null);
     const tokenData = playerToken(player.id, tenant.slug);
 
     return c.json({
@@ -67,7 +68,7 @@ export const authHandlers = {
     });
   },
 
-  claim(c: any) {
+  async claim(c: any) {
     const tenant = c.get('tenant');
     const env = getEnv();
     const { anonymous_jwt: anonymousJwt, authenticated_jwt: authenticatedJwt } = c.req.valid('json');
@@ -79,17 +80,14 @@ export const authHandlers = {
       return c.json({ error: 'invalid_claim_payload' }, 401);
     }
 
-    const sessions = store
-      .listSessionsByTenant(tenant.id)
-      .filter((session) => session.playerId === anonClaims.sub);
+    const allSessions = await store.listSessionsByTenant(tenant.id);
+    const sessions = allSessions.filter((session) => session.playerId === anonClaims.sub);
 
     let merged = 0;
     for (const session of sessions) {
-      const conflict = store
-        .listSessionsByTenant(tenant.id)
-        .find(
-          (candidate) => candidate.playerId === authClaims.sub && candidate.editionId === session.editionId
-        );
+      const conflict = allSessions.find(
+        (candidate) => candidate.playerId === authClaims.sub && candidate.editionId === session.editionId
+      );
       if (conflict) continue;
       session.playerId = authClaims.sub;
       merged += 1;
@@ -98,10 +96,10 @@ export const authHandlers = {
     return c.json({ player_id: authClaims.sub, sessions_merged: merged });
   },
 
-  external(c: any) {
+  async external(c: any) {
     const tenant = c.get('tenant');
     const { external_token: externalToken } = c.req.valid('json');
-    const player = store.createOrGetExternalPlayer(tenant.id, externalToken);
+    const player = await store.createOrGetExternalPlayer(tenant.id, externalToken);
     const tokenData = playerToken(player.id, tenant.slug);
 
     return c.json({
@@ -109,15 +107,5 @@ export const authHandlers = {
       jwt: tokenData.jwt,
       expires_at: tokenData.expiresAt
     });
-  },
-
-  oauthStart(c: any) {
-    const provider = c.req.param('provider');
-    return c.json({ provider, message: 'OAuth start is stubbed in OSS baseline' }, 501);
-  },
-
-  oauthCallback(c: any) {
-    const provider = c.req.param('provider');
-    return c.json({ provider, message: 'OAuth callback is stubbed in OSS baseline' }, 501);
   }
 };

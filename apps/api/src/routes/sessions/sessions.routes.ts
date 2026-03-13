@@ -7,6 +7,8 @@ import {
   playtestCapacitySchema,
   respondRequestSchema,
   respondResponseSchema,
+  sessionCompletedSchema,
+  sessionIncompleteSchema,
   sessionExistsSchema,
   sessionStateSchema,
   startSessionRequestSchema,
@@ -52,11 +54,7 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
           description: 'Playtest capacity reached',
           content: {
             'application/json': {
-              schema: z.object({
-                error: z.literal('playtest_capacity_reached'),
-                max_unique_players: z.number().int(),
-                current_unique_players: z.number().int()
-              })
+              schema: playtestCapacitySchema
             }
           }
         }
@@ -132,6 +130,14 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
               schema: apiErrorSchema
             }
           }
+        },
+        409: {
+          description: 'Session already completed',
+          content: {
+            'application/json': {
+              schema: sessionCompletedSchema
+            }
+          }
         }
       }
     }),
@@ -159,6 +165,14 @@ export function registerSessionsRoutes(app: OpenAPIHono<any>) {
           content: {
             'application/json': {
               schema: apiErrorSchema
+            }
+          }
+        },
+        409: {
+          description: 'Session already completed or missing round responses',
+          content: {
+            'application/json': {
+              schema: z.union([sessionCompletedSchema, sessionIncompleteSchema])
             }
           }
         }

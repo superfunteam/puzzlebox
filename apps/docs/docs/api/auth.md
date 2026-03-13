@@ -1,6 +1,6 @@
 # Auth API
 
-Puzzlebox supports four auth patterns so publishers can match local identity strategy.
+Puzzlebox baseline supports three auth patterns.
 
 ## Auth endpoints
 
@@ -11,8 +11,8 @@ Puzzlebox supports four auth patterns so publishers can match local identity str
 | `POST /auth/anonymous` | Public | Issues anonymous player JWT |
 | `POST /auth/claim` | Public | Merges anonymous history into authenticated account |
 | `POST /auth/external` | Public | BYO auth token exchange to Puzzlebox JWT |
-| `GET /auth/oauth/{provider}/start` | Public | OAuth initiation (provider redirect flow) |
-| `GET /auth/oauth/{provider}/callback` | Public | OAuth callback handling |
+
+OAuth routes are intentionally not part of this OSS baseline.
 
 ## Magic link flow
 

@@ -46,6 +46,7 @@ Frontend agents should treat resume as normal behavior:
 
 - Input: `{ "order": ["c","a","d","b"] }`
 - Returns correctness, partial score, and `positions_correct`.
+- Order must contain every option key exactly once.
 
 When partial credit is enabled, `max_score` is derived from the number of positions in the correct order array.
 
@@ -63,5 +64,11 @@ When partial credit is enabled, `max_score` is derived from the number of positi
 - `duration_seconds`
 - `streak`
 - `share_data`
+
+Possible `409` response:
+
+- `session_incomplete` when not all rounds have a response.
+
+`POST /sessions/{id}/respond` returns `session_completed` after a session has been finalized.
 
 Frontends should render `share_data.share_text` directly instead of rebuilding share copy client-side.

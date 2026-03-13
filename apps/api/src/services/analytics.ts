@@ -1,24 +1,24 @@
 import { store } from '../lib/store';
 import { dateInTimezone } from '../lib/time';
+import { getSessionMaxScore } from './scoring';
 
 function safeDivide(numerator: number, denominator: number): number {
   if (denominator === 0) return 0;
   return numerator / denominator;
 }
 
-export function getOverview(tenantId: string) {
-  const sessions = store.listSessionsByTenant(tenantId);
-  const tenant = store.getTenant(tenantId);
+export async function getOverview(tenantId: string) {
+  const sessions = await store.listSessionsByTenant(tenantId);
+  const tenant = await store.getTenant(tenantId);
   const timezone = tenant?.timezone ?? 'UTC';
   const today = dateInTimezone(new Date(), timezone);
   const todaySessions = sessions.filter((session) => dateInTimezone(new Date(session.startedAt), timezone) === today);
   const uniquePlayers = new Set(todaySessions.map((session) => session.playerId));
+  const games = await store.listGames(tenantId, false);
 
-  return {
-    daily_active_players: uniquePlayers.size,
-    total_sessions_today: todaySessions.length,
-    games: store.listGames(tenantId, false).map((game) => {
-      const gameEditions = store.listEditionsByGame(tenantId, game.id).map((edition) => edition.id);
+  const gameRows = await Promise.all(
+    games.map(async (game) => {
+      const gameEditions = (await store.listEditionsByGame(tenantId, game.id)).map((edition) => edition.id);
       const gameSessions = sessions.filter((session) => gameEditions.includes(session.editionId));
       const completed = gameSessions.filter((session) => session.completedAt);
 
@@ -28,17 +28,23 @@ export function getOverview(tenantId: string) {
         completion_rate: safeDivide(completed.length, gameSessions.length)
       };
     })
+  );
+
+  return {
+    daily_active_players: uniquePlayers.size,
+    total_sessions_today: todaySessions.length,
+    games: gameRows
   };
 }
 
-export function getGameAnalytics(tenantId: string, slug: string) {
-  const game = store.getGameBySlug(tenantId, slug);
+export async function getGameAnalytics(tenantId: string, slug: string) {
+  const game = await store.getGameBySlug(tenantId, slug);
   if (!game) return null;
 
-  const editions = store.listEditionsByGame(tenantId, game.id);
-  const sessions = store
-    .listSessionsByTenant(tenantId)
-    .filter((session) => editions.some((edition) => edition.id === session.editionId));
+  const editions = await store.listEditionsByGame(tenantId, game.id);
+  const sessions = (await store.listSessionsByTenant(tenantId)).filter((session) =>
+    editions.some((edition) => edition.id === session.editionId)
+  );
   const completed = sessions.filter((session) => session.completedAt !== null);
 
   const averageScorePct = safeDivide(
@@ -66,16 +72,32 @@ export function getGameAnalytics(tenantId: string, slug: string) {
   };
 }
 
-export function getEditionAnalytics(tenantId: string, editionId: string) {
-  const edition = store.getEdition(tenantId, editionId);
+export async function getEditionAnalytics(tenantId: string, editionId: string) {
+  const edition = await store.getEdition(tenantId, editionId);
   if (!edition) return null;
 
-  const rounds = store.listRounds(tenantId, editionId);
-  const sessions = store.listSessionsByTenant(tenantId).filter((session) => session.editionId === editionId);
-  const responses = store.listResponsesByTenant(tenantId).filter((response) => sessions.some((session) => session.id === response.sessionId));
+  const lookup = await store.getGameByEdition(tenantId, editionId);
+  if (!lookup) return null;
+
+  const rounds = await store.listRounds(tenantId, editionId);
+  const sessions = (await store.listSessionsByTenant(tenantId)).filter((session) => session.editionId === editionId);
+  const responses = (await store.listResponsesByTenant(tenantId)).filter((response) =>
+    sessions.some((session) => session.id === response.sessionId)
+  );
 
   const completedSessions = sessions.filter((session) => session.completedAt !== null);
   const totalScore = completedSessions.reduce((sum, item) => sum + (item.score ?? 0), 0);
+  const averageDurationSeconds = safeDivide(
+    completedSessions.reduce((sum, session) => {
+      if (!session.completedAt) return sum;
+      const duration = Math.max(
+        0,
+        Math.round((new Date(session.completedAt).valueOf() - new Date(session.startedAt).valueOf()) / 1000)
+      );
+      return sum + duration;
+    }, 0),
+    completedSessions.length
+  );
 
   const perRound = rounds.map((round) => {
     const roundResponses = responses.filter((response) => response.roundId === round.id);
@@ -95,12 +117,13 @@ export function getEditionAnalytics(tenantId: string, editionId: string) {
     completed_sessions: completedSessions.length,
     completion_rate: safeDivide(completedSessions.length, sessions.length),
     average_score: safeDivide(totalScore, completedSessions.length),
-    max_possible_score: rounds.length,
-    average_duration_seconds: 0,
+    max_possible_score: getSessionMaxScore(lookup.game, rounds),
+    average_duration_seconds: averageDurationSeconds,
     per_round: perRound,
     score_distribution: {},
     completion_funnel: {
-      started: sessions.length
+      started: sessions.length,
+      completed: completedSessions.length
     },
     survey_distributions: null
   };

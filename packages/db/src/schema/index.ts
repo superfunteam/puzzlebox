@@ -1,6 +1,7 @@
 export * from './api-keys';
 export * from './editions';
 export * from './games';
+export * from './magic-links';
 export * from './players';
 export * from './responses';
 export * from './rounds';

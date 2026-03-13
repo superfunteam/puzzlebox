@@ -849,6 +849,28 @@
           "started_at"
         ]
       },
+      "PlaytestCapacityError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "playtest_capacity_reached"
+            ]
+          },
+          "max_unique_players": {
+            "type": "integer"
+          },
+          "current_unique_players": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "error",
+          "max_unique_players",
+          "current_unique_players"
+        ]
+      },
       "SessionExistsError": {
         "type": "object",
         "properties": {
@@ -985,6 +1007,20 @@
           "percentage"
         ]
       },
+      "SessionCompletedError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "session_completed"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
       "RespondRequest": {
         "type": "object",
         "properties": {
@@ -1057,6 +1093,30 @@
           "duration_seconds",
           "streak",
           "share_data"
+        ]
+      },
+      "SessionIncompleteError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "session_incomplete"
+            ]
+          },
+          "answered_rounds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "total_rounds": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "error",
+          "answered_rounds",
+          "total_rounds"
         ]
       },
       "PlayerListResponse": {
@@ -1132,7 +1192,6 @@
         "type": "string",
         "enum": [
           "magic_link",
-          "oauth",
           "external",
           "anonymous"
         ]
@@ -1516,9 +1575,6 @@
                 "properties": {
                   "timezone": {
                     "type": "string"
-                  },
-                  "device_fingerprint": {
-                    "type": "string"
                   }
                 }
               }
@@ -1653,84 +1709,6 @@
                     "player_id",
                     "jwt",
                     "expires_at"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/oauth/{provider}/start": {
-      "get": {
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            },
-            "required": true,
-            "name": "provider",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "501": {
-            "description": "OAuth start not enabled in baseline",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "provider": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "provider",
-                    "message"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/oauth/{provider}/callback": {
-      "get": {
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            },
-            "required": true,
-            "name": "provider",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "501": {
-            "description": "OAuth callback not enabled in baseline",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "provider": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "provider",
-                    "message"
                   ]
                 }
               }
@@ -2380,26 +2358,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "enum": [
-                        "playtest_capacity_reached"
-                      ]
-                    },
-                    "max_unique_players": {
-                      "type": "integer"
-                    },
-                    "current_unique_players": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "error",
-                    "max_unique_players",
-                    "current_unique_players"
-                  ]
+                  "$ref": "#/components/schemas/PlaytestCapacityError"
                 }
               }
             }
@@ -2504,6 +2463,16 @@
               }
             }
           },
+          "409": {
+            "description": "Session already completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionCompletedError"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Answer or round validation failed",
             "content": {
@@ -2547,6 +2516,23 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session already completed or missing round responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionCompletedError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionIncompleteError"
+                    }
+                  ]
                 }
               }
             }

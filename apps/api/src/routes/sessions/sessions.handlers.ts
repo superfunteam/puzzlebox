@@ -14,15 +14,44 @@ function getGameByEdition(tenantId: string, editionId: string) {
   return store.getGameByEdition(tenantId, editionId);
 }
 
+function sessionDurationSeconds(startedAt: string, completedAt: string | null): number {
+  if (!completedAt) return 0;
+  return Math.max(0, Math.round((new Date(completedAt).valueOf() - new Date(startedAt).valueOf()) / 1000));
+}
+
+function presentCompletion(input: {
+  sessionId: string;
+  startedAt: string;
+  completedAt: string | null;
+  score: number;
+  maxScore: number;
+  shareData: Record<string, unknown>;
+  streak: { currentStreak: number; longestStreak: number; freezesRemaining: number };
+}) {
+  return {
+    session_id: input.sessionId,
+    score: input.score,
+    max_score: input.maxScore,
+    duration_seconds: sessionDurationSeconds(input.startedAt, input.completedAt),
+    streak: {
+      current: input.streak.currentStreak,
+      longest: input.streak.longestStreak,
+      is_new_record: input.streak.currentStreak === input.streak.longestStreak,
+      freezes_remaining: input.streak.freezesRemaining
+    },
+    share_data: input.shareData
+  };
+}
+
 export const sessionsHandlers = {
-  start(c: any) {
+  async start(c: any) {
     const player = requirePlayer(c);
     if (!player.ok) return player.response;
 
     const tenant = c.get('tenant');
     const { edition_id: editionId } = c.req.valid('json');
 
-    const edition = store.getEdition(tenant.id, editionId);
+    const edition = await store.getEdition(tenant.id, editionId);
     if (!edition) return c.json({ error: 'edition_not_found' }, 404);
     if (edition.status !== 'active') {
       return c.json(
@@ -34,14 +63,14 @@ export const sessionsHandlers = {
       );
     }
 
-    const lookup = getGameByEdition(tenant.id, editionId);
+    const lookup = await getGameByEdition(tenant.id, editionId);
     if (!lookup) return c.json({ error: 'edition_game_not_found' }, 404);
 
     if (lookup.game.lifecycle === 'playtest') {
       const maxUniquePlayers = GAME_LIFECYCLE_POLICY.playtest.maxUniquePlayers;
       if (maxUniquePlayers !== null) {
-        const currentUniquePlayers = store.countUniquePlayersByGame(tenant.id, lookup.game.id);
-        const hasPlayedGame = store.hasPlayerSessionForGame(tenant.id, player.playerId, lookup.game.id);
+        const currentUniquePlayers = await store.countUniquePlayersByGame(tenant.id, lookup.game.id);
+        const hasPlayedGame = await store.hasPlayerSessionForGame(tenant.id, player.playerId, lookup.game.id);
 
         if (!hasPlayedGame && currentUniquePlayers >= maxUniquePlayers) {
           return c.json(
@@ -56,12 +85,12 @@ export const sessionsHandlers = {
       }
     }
 
-    const created = store.createSession(tenant.id, player.playerId, editionId);
+    const created = await store.createSession(tenant.id, player.playerId, editionId);
     if (created.existing) {
       return c.json(
         {
           error: 'session_exists',
-          existing_session: presentSession(created.existing, store.getSessionResponses(tenant.id, created.existing.id))
+          existing_session: presentSession(created.existing, await store.getSessionResponses(tenant.id, created.existing.id))
         },
         409
       );
@@ -70,22 +99,22 @@ export const sessionsHandlers = {
     return c.json({ session_id: created.created!.id, started_at: created.created!.startedAt }, 201);
   },
 
-  getSession(c: any) {
+  async getSession(c: any) {
     const player = requirePlayer(c);
     if (!player.ok) return player.response;
 
     const tenant = c.get('tenant');
     const id = c.req.param('id');
-    const session = store.getSession(tenant.id, id);
+    const session = await store.getSession(tenant.id, id);
     if (!session || session.playerId !== player.playerId) {
       return c.json({ error: 'not_found' }, 404);
     }
 
-    const responses = store.getSessionResponses(tenant.id, id);
+    const responses = await store.getSessionResponses(tenant.id, id);
     return c.json(presentSession(session, responses));
   },
 
-  respond(c: any) {
+  async respond(c: any) {
     const player = requirePlayer(c);
     if (!player.ok) return player.response;
 
@@ -93,17 +122,20 @@ export const sessionsHandlers = {
     const sessionId = c.req.param('id');
     const body = c.req.valid('json');
 
-    const session = store.getSession(tenant.id, sessionId);
+    const session = await store.getSession(tenant.id, sessionId);
     if (!session || session.playerId !== player.playerId) {
       return c.json({ error: 'session_not_found' }, 404);
     }
+    if (session.completedAt) {
+      return c.json({ error: 'session_completed' }, 409);
+    }
 
-    const round = store.getRound(tenant.id, body.round_id);
+    const round = await store.getRound(tenant.id, body.round_id);
     if (!round || round.editionId !== session.editionId) {
       return c.json({ error: 'round_not_in_session_edition' }, 422);
     }
 
-    const lookup = getGameByEdition(tenant.id, session.editionId);
+    const lookup = await getGameByEdition(tenant.id, session.editionId);
     if (!lookup) {
       return c.json({ error: 'edition_game_not_found' }, 404);
     }
@@ -122,7 +154,7 @@ export const sessionsHandlers = {
       throw error;
     }
 
-    const created = store.createOrGetResponse(tenant.id, {
+    const created = await store.createOrGetResponse(tenant.id, {
       sessionId,
       roundId: round.id,
       answer: body.answer,
@@ -133,8 +165,7 @@ export const sessionsHandlers = {
     const effective = created.created ?? created.existing!;
 
     if (lookup.game.mode === 'survey') {
-      const allRoundResponses = store
-        .listResponsesByTenant(tenant.id)
+      const allRoundResponses = (await store.listResponsesByTenant(tenant.id))
         .filter((response) => response.roundId === round.id);
 
       const counts: Record<string, number> = {};
@@ -178,36 +209,65 @@ export const sessionsHandlers = {
     return c.json(payload);
   },
 
-  complete(c: any) {
+  async complete(c: any) {
     const playerAuth = requirePlayer(c);
     if (!playerAuth.ok) return playerAuth.response;
 
     const tenant = c.get('tenant');
     const sessionId = c.req.param('id');
-    const session = store.getSession(tenant.id, sessionId);
+    const session = await store.getSession(tenant.id, sessionId);
     if (!session || session.playerId !== playerAuth.playerId) {
       return c.json({ error: 'session_not_found' }, 404);
     }
 
-    const lookup = getGameByEdition(tenant.id, session.editionId);
+    const lookup = await getGameByEdition(tenant.id, session.editionId);
     if (!lookup) return c.json({ error: 'edition_game_not_found' }, 404);
 
-    const rounds = store.listRounds(tenant.id, session.editionId);
-    const responses = store.getSessionResponses(tenant.id, sessionId);
+    const player = await store.getPlayer(tenant.id, playerAuth.playerId);
+    if (!player) return c.json({ error: 'player_not_found' }, 404);
+
+    const existingStreak = await store.getStreak(tenant.id, player.id, lookup.game.id);
+
+    if (session.completedAt && session.score !== null && session.maxScore !== null && session.shareData !== null) {
+      return c.json(
+        presentCompletion({
+          sessionId,
+          startedAt: session.startedAt,
+          completedAt: session.completedAt,
+          score: session.score,
+          maxScore: session.maxScore,
+          shareData: session.shareData,
+          streak: existingStreak
+        })
+      );
+    }
+    if (session.completedAt) {
+      return c.json({ error: 'session_completed' }, 409);
+    }
+
+    const rounds = await store.listRounds(tenant.id, session.editionId);
+    const responses = await store.getSessionResponses(tenant.id, sessionId);
+    if (responses.length < rounds.length) {
+      return c.json(
+        {
+          error: 'session_incomplete',
+          answered_rounds: responses.length,
+          total_rounds: rounds.length
+        },
+        409
+      );
+    }
+
     const score = responses.reduce((sum, response) => sum + response.score, 0);
     const maxScore = getSessionMaxScore(lookup.game, rounds);
 
-    const player = store.getPlayer(tenant.id, playerAuth.playerId);
-    if (!player) return c.json({ error: 'player_not_found' }, 404);
-
-    const streak = store.getStreak(tenant.id, player.id, lookup.game.id);
     const updatedStreak = updateStreak({
-      streak,
+      streak: existingStreak,
       player,
       tenant,
       graceHours: getEnv().streakGraceHours
     });
-    store.setStreak(updatedStreak);
+    await store.setStreak(updatedStreak);
 
     const perRound: Array<boolean | null> = rounds.map((round) => {
       const response = responses.find((item) => item.roundId === round.id);
@@ -224,26 +284,22 @@ export const sessionsHandlers = {
       perRound
     });
 
-    const finalized = store.completeSession(tenant.id, sessionId, {
+    const finalized = await store.completeSession(tenant.id, sessionId, {
       score,
       maxScore,
       shareData
     });
 
-    return c.json({
-      session_id: sessionId,
-      score,
-      max_score: maxScore,
-      duration_seconds: finalized?.completedAt
-        ? Math.max(0, Math.round((new Date(finalized.completedAt).valueOf() - new Date(finalized.startedAt).valueOf()) / 1000))
-        : 0,
-      streak: {
-        current: updatedStreak.currentStreak,
-        longest: updatedStreak.longestStreak,
-        is_new_record: updatedStreak.currentStreak === updatedStreak.longestStreak,
-        freezes_remaining: updatedStreak.freezesRemaining
-      },
-      share_data: shareData
-    });
+    return c.json(
+      presentCompletion({
+        sessionId,
+        startedAt: finalized?.startedAt ?? session.startedAt,
+        completedAt: finalized?.completedAt ?? session.completedAt,
+        score,
+        maxScore,
+        shareData,
+        streak: updatedStreak
+      })
+    );
   }
 };

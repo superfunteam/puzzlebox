@@ -16,13 +16,17 @@
   "dependencies": {
     "@hono/node-server": "^1.19.9",
     "@hono/zod-openapi": "^1.2.1",
+    "@puzzlebox/db": "0.1.0",
     "@puzzlebox/shared": "0.1.0",
     "@scalar/hono-api-reference": "^0.9.40",
     "date-fns-tz": "^3.2.0",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.6.12",
-    "hono-rate-limiter": "^0.5.3"
+    "hono-rate-limiter": "^0.5.3",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
+    "@types/pg": "^8.15.6",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"

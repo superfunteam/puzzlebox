@@ -28,3 +28,32 @@ jobs:
       - run: npm install
       - run: npm run openapi:baseline
       - run: git diff --exit-code openapi.baseline.json
+
+  api-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: puzzlebox
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d puzzlebox"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/puzzlebox
+      STORAGE_BACKEND: postgres
+      DATABASE_SSL: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run db:push
+      - run: npm run test -w @puzzlebox/api

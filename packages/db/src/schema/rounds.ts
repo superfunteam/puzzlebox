@@ -1,11 +1,17 @@
 import { integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { editions } from './editions';
+import { tenants } from './tenants';
 
 export const rounds = pgTable(
   'rounds',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    editionId: uuid('edition_id').notNull(),
-    tenantId: uuid('tenant_id').notNull(),
+    editionId: uuid('edition_id')
+      .notNull()
+      .references(() => editions.id, { onDelete: 'cascade' }),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
     position: integer('position').notNull(),
     prompt: text('prompt').notNull(),
     options: jsonb('options').$type<Array<{ key: string; label: string }>>().notNull(),

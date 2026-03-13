@@ -7,7 +7,7 @@ export const tenantMiddleware: MiddlewareHandler = async (c, next) => {
     return c.json({ error: 'missing_tenant', message: 'X-Tenant header is required' }, 400);
   }
 
-  const tenant = store.getTenantBySlug(tenantSlug);
+  const tenant = await store.getTenantBySlug(tenantSlug);
   if (!tenant) {
     return c.json({ error: 'unknown_tenant' }, 404);
   }

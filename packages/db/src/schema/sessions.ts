@@ -1,12 +1,21 @@
 import { integer, jsonb, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { editions } from './editions';
+import { players } from './players';
+import { tenants } from './tenants';
 
 export const sessions = pgTable(
   'sessions',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    playerId: uuid('player_id').notNull(),
-    editionId: uuid('edition_id').notNull(),
-    tenantId: uuid('tenant_id').notNull(),
+    playerId: uuid('player_id')
+      .notNull()
+      .references(() => players.id, { onDelete: 'cascade' }),
+    editionId: uuid('edition_id')
+      .notNull()
+      .references(() => editions.id, { onDelete: 'cascade' }),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
     startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     score: integer('score'),

@@ -1,3 +1,4 @@
+import type { Game } from '@puzzlebox/shared';
 import { requireAdmin } from '../../lib/authz';
 import { presentEdition, presentRound } from '../../lib/presenters';
 import { store } from '../../lib/store';
@@ -8,14 +9,50 @@ function assertRoundCount(rounds: unknown[], expected: number) {
   }
 }
 
+interface RoundValidationShape {
+  options: Array<{ key: string; label: string }>;
+  correct_answer: Record<string, unknown> | null;
+}
+
+function validateRoundByMode(mode: Game['mode'], round: RoundValidationShape): boolean {
+  const optionKeys = round.options.map((option) => option.key);
+  const optionKeySet = new Set(optionKeys);
+  const hasCorrect = round.correct_answer !== null && round.correct_answer !== undefined;
+
+  if (mode === 'survey') {
+    return !hasCorrect;
+  }
+
+  if (!hasCorrect) {
+    return false;
+  }
+
+  if (mode === 'pick_one') {
+    const key = round.correct_answer?.key;
+    return typeof key === 'string' && optionKeySet.has(key);
+  }
+
+  const order = round.correct_answer?.order;
+  if (!Array.isArray(order) || order.length !== optionKeys.length) {
+    return false;
+  }
+
+  const normalizedOrder = order.map((value) => String(value));
+  if (new Set(normalizedOrder).size !== normalizedOrder.length) {
+    return false;
+  }
+
+  return normalizedOrder.every((key) => optionKeySet.has(key));
+}
+
 export const editionsHandlers = {
-  createEdition(c: any) {
-    const admin = requireAdmin(c);
+  async createEdition(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const slug = c.req.param('slug');
-    const game = store.getGameBySlug(tenant.id, slug);
+    const game = await store.getGameBySlug(tenant.id, slug);
     if (!game) return c.json({ error: 'game_not_found' }, 404);
 
     const body = c.req.valid('json');
@@ -27,9 +64,10 @@ export const editionsHandlers = {
         const hasCorrect = round.correct_answer !== null && round.correct_answer !== undefined;
         if (game.mode === 'survey' && hasCorrect) return c.json({ error: 'survey_round_cannot_have_correct_answer' }, 422);
         if (game.mode !== 'survey' && !hasCorrect) return c.json({ error: 'non_survey_round_requires_correct_answer' }, 422);
+        if (!validateRoundByMode(game.mode, round)) return c.json({ error: 'invalid_correct_answer' }, 422);
       }
 
-      const created = store.createEdition(tenant.id, game.id, {
+      const created = await store.createEdition(tenant.id, game.id, {
         editionDate: body.edition_date,
         status: body.status,
         publishAt: body.publish_at ?? null,
@@ -63,42 +101,42 @@ export const editionsHandlers = {
     }
   },
 
-  listEditions(c: any) {
-    const admin = requireAdmin(c);
+  async listEditions(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const slug = c.req.param('slug');
-    const game = store.getGameBySlug(tenant.id, slug);
+    const game = await store.getGameBySlug(tenant.id, slug);
     if (!game) return c.json({ error: 'game_not_found' }, 404);
 
-    return c.json({ editions: store.listEditionsByGame(tenant.id, game.id).map(presentEdition) });
+    return c.json({ editions: (await store.listEditionsByGame(tenant.id, game.id)).map(presentEdition) });
   },
 
-  getEdition(c: any) {
-    const admin = requireAdmin(c);
+  async getEdition(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const id = c.req.param('id');
-    const edition = store.getEdition(tenant.id, id);
+    const edition = await store.getEdition(tenant.id, id);
     if (!edition) return c.json({ error: 'not_found' }, 404);
 
     return c.json({
       ...presentEdition(edition),
-      rounds: store.listRounds(tenant.id, edition.id).map((round) => presentRound(round, { includeCorrectAnswer: true }))
+      rounds: (await store.listRounds(tenant.id, edition.id)).map((round) => presentRound(round, { includeCorrectAnswer: true }))
     });
   },
 
-  patchEdition(c: any) {
-    const admin = requireAdmin(c);
+  async patchEdition(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const id = c.req.param('id');
     const body = c.req.valid('json');
 
-    const edition = store.patchEdition(tenant.id, id, {
+    const edition = await store.patchEdition(tenant.id, id, {
       status: body.status,
       metadata: body.metadata,
       publishAt: body.publish_at
@@ -108,81 +146,95 @@ export const editionsHandlers = {
     return c.json(presentEdition(edition));
   },
 
-  publishEdition(c: any) {
-    const admin = requireAdmin(c);
+  async publishEdition(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const id = c.req.param('id');
-    const edition = store.patchEdition(tenant.id, id, { status: 'active' });
+    const edition = await store.patchEdition(tenant.id, id, { status: 'active' });
     if (!edition) return c.json({ error: 'not_found' }, 404);
     return c.json(presentEdition(edition));
   },
 
-  archiveEdition(c: any) {
-    const admin = requireAdmin(c);
+  async archiveEdition(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const id = c.req.param('id');
-    const edition = store.patchEdition(tenant.id, id, { status: 'archived' });
+    const edition = await store.patchEdition(tenant.id, id, { status: 'archived' });
     if (!edition) return c.json({ error: 'not_found' }, 404);
     return c.json(presentEdition(edition));
   },
 
-  listRounds(c: any) {
-    const admin = requireAdmin(c);
+  async listRounds(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const id = c.req.param('id');
-    const edition = store.getEdition(tenant.id, id);
+    const edition = await store.getEdition(tenant.id, id);
     if (!edition) return c.json({ error: 'not_found' }, 404);
 
-    return c.json({ rounds: store.listRounds(tenant.id, edition.id).map((round) => presentRound(round, { includeCorrectAnswer: true })) });
+    return c.json({ rounds: (await store.listRounds(tenant.id, edition.id)).map((round) => presentRound(round, { includeCorrectAnswer: true })) });
   },
 
-  patchRound(c: any) {
-    const admin = requireAdmin(c);
+  async patchRound(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const id = c.req.param('id');
     const body = c.req.valid('json');
 
-    const round = store.getRound(tenant.id, id);
+    const round = await store.getRound(tenant.id, id);
     if (!round) return c.json({ error: 'not_found' }, 404);
 
-    const edition = store.getEdition(tenant.id, round.editionId);
+    const edition = await store.getEdition(tenant.id, round.editionId);
     if (!edition || edition.status !== 'draft') {
       return c.json({ error: 'round_mutation_requires_draft_edition' }, 409);
     }
 
-    const updated = store.patchRound(tenant.id, id, {
+    const game = await store.getGameById(tenant.id, edition.gameId);
+    if (!game) return c.json({ error: 'edition_game_not_found' }, 404);
+
+    const effectiveRound: RoundValidationShape = {
+      options: body.options ?? round.options,
+      correct_answer: body.correct_answer !== undefined ? body.correct_answer : round.correctAnswer
+    };
+
+    const hasCorrect = effectiveRound.correct_answer !== null && effectiveRound.correct_answer !== undefined;
+    if (game.mode === 'survey' && hasCorrect) return c.json({ error: 'survey_round_cannot_have_correct_answer' }, 422);
+    if (game.mode !== 'survey' && !hasCorrect) return c.json({ error: 'non_survey_round_requires_correct_answer' }, 422);
+    if (!validateRoundByMode(game.mode, effectiveRound)) return c.json({ error: 'invalid_correct_answer' }, 422);
+
+    const updated = await store.patchRound(tenant.id, id, {
       prompt: body.prompt,
       options: body.options,
       correctAnswer: body.correct_answer,
       metadata: body.metadata
     });
+    if (!updated) return c.json({ error: 'not_found' }, 404);
 
-    return c.json(presentRound(updated!, { includeCorrectAnswer: true }));
+    return c.json(presentRound(updated, { includeCorrectAnswer: true }));
   },
 
-  deleteRound(c: any) {
-    const admin = requireAdmin(c);
+  async deleteRound(c: any) {
+    const admin = await requireAdmin(c);
     if (!admin.ok) return admin.response;
 
     const tenant = c.get('tenant');
     const id = c.req.param('id');
-    const round = store.getRound(tenant.id, id);
+    const round = await store.getRound(tenant.id, id);
     if (!round) return c.json({ error: 'not_found' }, 404);
 
-    const edition = store.getEdition(tenant.id, round.editionId);
+    const edition = await store.getEdition(tenant.id, round.editionId);
     if (!edition || edition.status !== 'draft') {
       return c.json({ error: 'round_mutation_requires_draft_edition' }, 409);
     }
 
-    store.deleteRound(tenant.id, id);
+    await store.deleteRound(tenant.id, id);
     return c.json({ id, deleted: true });
   }
 };

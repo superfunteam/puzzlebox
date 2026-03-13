@@ -1,5 +1,8 @@
 # Puzzlebox PRD
 
+> Status note (March 13, 2026): this document is historical product context and includes planned features that are not all implemented in the OSS baseline.  
+> Source of truth for current behavior is `README.md`, `AGENTS.md`, and `apps/docs/docs/`.
+
 **The open-source middleware for building daily-play games for newsrooms.**
 
 Version: 1.0 (Production-ready)

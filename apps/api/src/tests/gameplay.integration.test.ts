@@ -38,17 +38,17 @@ function createPlayerJwt(playerId: string) {
   );
 }
 
-function createAnonymousPlayerToken() {
-  const tenant = store.getTenantBySlug(env.defaultTenantSlug);
+async function createAnonymousPlayerToken() {
+  const tenant = await store.getTenantBySlug(env.defaultTenantSlug);
   if (!tenant) throw new Error('tenant_missing_in_test');
-  const player = store.createAnonymousPlayer(tenant.id, 'America/New_York');
+  const player = await store.createAnonymousPlayer(tenant.id, 'America/New_York');
   return createPlayerJwt(player.id);
 }
 
 describe('core gameplay integration', () => {
-  beforeEach(() => {
-    store.__resetForTests();
-    store.initDefaultTenant({
+  beforeEach(async () => {
+    await store.__resetForTests();
+    await store.initDefaultTenant({
       slug: env.defaultTenantSlug,
       name: env.defaultTenantName,
       timezone: env.defaultTenantTimezone,
@@ -556,7 +556,7 @@ describe('core gameplay integration', () => {
     expect(createEdition.status).toBe(201);
     const editionBody = await createEdition.json();
 
-    const jwt = createAnonymousPlayerToken();
+    const jwt = await createAnonymousPlayerToken();
 
     const start = await app.request('/api/v1/sessions', {
       method: 'POST',
@@ -660,7 +660,7 @@ describe('core gameplay integration', () => {
     const playerTokens: string[] = [];
 
     for (let i = 0; i < 20; i += 1) {
-      const jwt = createAnonymousPlayerToken();
+      const jwt = await createAnonymousPlayerToken();
       playerTokens.push(jwt);
 
       const start = await app.request('/api/v1/sessions', {
@@ -674,7 +674,7 @@ describe('core gameplay integration', () => {
       expect(start.status).toBe(201);
     }
 
-    const blockedJwt = createAnonymousPlayerToken();
+    const blockedJwt = await createAnonymousPlayerToken();
 
     const blockedStart = await app.request('/api/v1/sessions', {
       method: 'POST',
@@ -759,7 +759,7 @@ describe('core gameplay integration', () => {
     const editionBody = await edition.json();
 
     for (let i = 0; i < 21; i += 1) {
-      const jwt = createAnonymousPlayerToken();
+      const jwt = await createAnonymousPlayerToken();
 
       const start = await app.request('/api/v1/sessions', {
         method: 'POST',
@@ -826,7 +826,7 @@ describe('core gameplay integration', () => {
     });
     const editionBody = await createEdition.json();
 
-    const jwt = createAnonymousPlayerToken();
+    const jwt = await createAnonymousPlayerToken();
 
     const start = await app.request('/api/v1/sessions', {
       method: 'POST',
@@ -871,5 +871,337 @@ describe('core gameplay integration', () => {
     const completeBody = await complete.json();
     expect(completeBody.score).toBe(1);
     expect(completeBody.max_score).toBe(3);
+  });
+
+  it('rejects invalid ordered-sequence answer shapes', async () => {
+    const app = buildApp();
+
+    await app.request('/api/v1/games', {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        'X-API-Key': env.defaultApiKey
+      },
+      body: JSON.stringify({
+        name: 'Timeline Strict',
+        slug: 'timeline-strict',
+        mode: 'ordered_sequence',
+        config: {
+          rounds_per_edition: 1,
+          partial_credit: true,
+          share_emoji_correct: '🟩',
+          share_emoji_incorrect: '🟥',
+          share_emoji_game: '🧭',
+          share_url_template: 'https://play.example.com/{slug}',
+          allow_anonymous: true
+        }
+      })
+    });
+
+    await app.request('/api/v1/games/timeline-strict/editions', {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        'X-API-Key': env.defaultApiKey
+      },
+      body: JSON.stringify({
+        edition_date: tenantDate(),
+        status: 'active',
+        publish_at: null,
+        metadata: {},
+        rounds: [
+          {
+            position: 1,
+            prompt: 'Sort oldest to newest',
+            options: [
+              { key: 'a', label: 'Alpha' },
+              { key: 'b', label: 'Beta' },
+              { key: 'c', label: 'Gamma' }
+            ],
+            correct_answer: { order: ['a', 'b', 'c'] },
+            metadata: {}
+          }
+        ]
+      })
+    });
+
+    const jwt = await createAnonymousPlayerToken();
+    const today = await app.request('/api/v1/games/timeline-strict/today', {
+      method: 'GET',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      }
+    });
+    const todayBody = await today.json();
+
+    const start = await app.request('/api/v1/sessions', {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      },
+      body: JSON.stringify({ edition_id: todayBody.edition_id })
+    });
+    const startBody = await start.json();
+
+    const invalidLength = await app.request(`/api/v1/sessions/${startBody.session_id}/respond`, {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      },
+      body: JSON.stringify({
+        round_id: todayBody.rounds[0].id,
+        answer: { order: ['a', 'b'] }
+      })
+    });
+    expect(invalidLength.status).toBe(422);
+    expect(await invalidLength.json()).toEqual({ error: 'invalid_order' });
+
+    const duplicated = await app.request(`/api/v1/sessions/${startBody.session_id}/respond`, {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      },
+      body: JSON.stringify({
+        round_id: todayBody.rounds[0].id,
+        answer: { order: ['a', 'a', 'b'] }
+      })
+    });
+    expect(duplicated.status).toBe(422);
+    expect(await duplicated.json()).toEqual({ error: 'invalid_order' });
+  });
+
+  it('guards session lifecycle for incomplete and completed sessions', async () => {
+    const app = buildApp();
+
+    await app.request('/api/v1/games', {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        'X-API-Key': env.defaultApiKey
+      },
+      body: JSON.stringify({
+        name: 'Lifecycle Guard',
+        slug: 'lifecycle-guard',
+        mode: 'pick_one',
+        config: {
+          rounds_per_edition: 2,
+          partial_credit: true,
+          share_emoji_correct: '🟩',
+          share_emoji_incorrect: '🟥',
+          share_emoji_game: '🧩',
+          share_url_template: 'https://play.example.com/{slug}',
+          allow_anonymous: true
+        }
+      })
+    });
+
+    await app.request('/api/v1/games/lifecycle-guard/editions', {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        'X-API-Key': env.defaultApiKey
+      },
+      body: JSON.stringify({
+        edition_date: tenantDate(),
+        status: 'active',
+        publish_at: null,
+        metadata: {},
+        rounds: [
+          {
+            position: 1,
+            prompt: 'Round 1',
+            options: [
+              { key: 'a', label: 'Anne' },
+              { key: 'b', label: 'Rebecca' }
+            ],
+            correct_answer: { key: 'a' },
+            metadata: {}
+          },
+          {
+            position: 2,
+            prompt: 'Round 2',
+            options: [
+              { key: 'a', label: 'Anne' },
+              { key: 'b', label: 'Rebecca' }
+            ],
+            correct_answer: { key: 'b' },
+            metadata: {}
+          }
+        ]
+      })
+    });
+
+    const jwt = await createAnonymousPlayerToken();
+    const today = await app.request('/api/v1/games/lifecycle-guard/today', {
+      method: 'GET',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      }
+    });
+    const todayBody = await today.json();
+
+    const start = await app.request('/api/v1/sessions', {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      },
+      body: JSON.stringify({ edition_id: todayBody.edition_id })
+    });
+    const startBody = await start.json();
+
+    const answerRoundOne = await app.request(`/api/v1/sessions/${startBody.session_id}/respond`, {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      },
+      body: JSON.stringify({
+        round_id: todayBody.rounds[0].id,
+        answer: { key: 'a' }
+      })
+    });
+    expect(answerRoundOne.status).toBe(200);
+
+    const incompleteComplete = await app.request(`/api/v1/sessions/${startBody.session_id}/complete`, {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      }
+    });
+    expect(incompleteComplete.status).toBe(409);
+    expect(await incompleteComplete.json()).toEqual({
+      error: 'session_incomplete',
+      answered_rounds: 1,
+      total_rounds: 2
+    });
+
+    const answerRoundTwo = await app.request(`/api/v1/sessions/${startBody.session_id}/respond`, {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      },
+      body: JSON.stringify({
+        round_id: todayBody.rounds[1].id,
+        answer: { key: 'b' }
+      })
+    });
+    expect(answerRoundTwo.status).toBe(200);
+
+    const complete = await app.request(`/api/v1/sessions/${startBody.session_id}/complete`, {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      }
+    });
+    expect(complete.status).toBe(200);
+
+    const respondAfterComplete = await app.request(`/api/v1/sessions/${startBody.session_id}/respond`, {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      },
+      body: JSON.stringify({
+        round_id: todayBody.rounds[1].id,
+        answer: { key: 'b' }
+      })
+    });
+    expect(respondAfterComplete.status).toBe(409);
+    expect(await respondAfterComplete.json()).toEqual({ error: 'session_completed' });
+
+    const repeatComplete = await app.request(`/api/v1/sessions/${startBody.session_id}/complete`, {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        Authorization: `Bearer ${jwt}`
+      }
+    });
+    expect(repeatComplete.status).toBe(200);
+  });
+
+  it('prevents round patches that violate game mode answer rules', async () => {
+    const app = buildApp();
+
+    await app.request('/api/v1/games', {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        'X-API-Key': env.defaultApiKey
+      },
+      body: JSON.stringify({
+        name: 'Survey Guard',
+        slug: 'survey-guard',
+        mode: 'survey',
+        config: {
+          rounds_per_edition: 1,
+          partial_credit: true,
+          share_emoji_correct: '🟩',
+          share_emoji_incorrect: '🟥',
+          share_emoji_game: '🗳️',
+          share_url_template: 'https://play.example.com/{slug}',
+          allow_anonymous: true
+        }
+      })
+    });
+
+    const createEdition = await app.request('/api/v1/games/survey-guard/editions', {
+      method: 'POST',
+      headers: {
+        ...tenantHeaders(),
+        'X-API-Key': env.defaultApiKey
+      },
+      body: JSON.stringify({
+        edition_date: tenantDate(),
+        status: 'draft',
+        publish_at: null,
+        metadata: {},
+        rounds: [
+          {
+            position: 1,
+            prompt: 'What do you call this?',
+            options: [
+              { key: 'a', label: 'Soda' },
+              { key: 'b', label: 'Pop' }
+            ],
+            correct_answer: null,
+            metadata: {}
+          }
+        ]
+      })
+    });
+    const editionBody = await createEdition.json();
+
+    const editionDetail = await app.request(`/api/v1/editions/${editionBody.id}`, {
+      method: 'GET',
+      headers: {
+        ...tenantHeaders(),
+        'X-API-Key': env.defaultApiKey
+      }
+    });
+    const detailBody = await editionDetail.json();
+    const roundId = detailBody.rounds[0].id as string;
+
+    const invalidPatch = await app.request(`/api/v1/rounds/${roundId}`, {
+      method: 'PATCH',
+      headers: {
+        ...tenantHeaders(),
+        'X-API-Key': env.defaultApiKey
+      },
+      body: JSON.stringify({
+        correct_answer: { key: 'a' }
+      })
+    });
+
+    expect(invalidPatch.status).toBe(422);
+    expect(await invalidPatch.json()).toEqual({ error: 'survey_round_cannot_have_correct_answer' });
   });
 });
