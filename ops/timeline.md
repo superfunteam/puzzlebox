@@ -198,3 +198,10 @@
 | 2026-02-15T04:13:46Z | agent-platform | FILE_EDIT | DOCS-HERO-001 | ignore vitepress cache artifacts |
 | 2026-02-15T04:13:46Z | orchestrator | TEST_RUN | DOCS-HERO-001 |  |
 | 2026-02-15T20:30:00Z | orchestrator | TASK_START | P0-BOOT-001 | bootstrap monorepo scaffold and CI |
+| 2026-03-13T09:16:06Z | codex | TASK_START | AGENT-FIRST-LEAN-001 | audit repo for lean agent-first experience and align code/docs/landing |
+| 2026-03-13T09:16:06Z | codex | TEST_RUN | AGENT-FIRST-LEAN-001 |  |
+| 2026-03-13T09:16:06Z | codex | TEST_RUN | AGENT-FIRST-LEAN-001 |  |
+| 2026-03-13T09:16:06Z | codex | TEST_RUN | AGENT-FIRST-LEAN-001 |  |
+| 2026-03-13T09:16:06Z | codex | TEST_RUN | AGENT-FIRST-LEAN-001 |  |
+| 2026-03-13T09:16:06Z | codex | TASK_DONE | AGENT-FIRST-LEAN-001 | removed dead code and oauth stubs, tightened gameplay invariants, rewrote agent-first docs and landing |
+| 2026-03-13T09:16:37Z | codex | TEST_RUN | AGENT-FIRST-LEAN-001 |  |

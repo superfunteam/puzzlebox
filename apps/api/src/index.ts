@@ -4,25 +4,32 @@ import { getEnv } from './lib/env';
 import { store } from './lib/store';
 import { startEditionScheduler } from './services/edition-scheduler';
 
-const env = getEnv();
+async function boot() {
+  const env = getEnv();
 
-store.initDefaultTenant({
-  slug: env.defaultTenantSlug,
-  name: env.defaultTenantName,
-  timezone: env.defaultTenantTimezone,
-  apiKey: env.defaultApiKey
+  await store.initDefaultTenant({
+    slug: env.defaultTenantSlug,
+    name: env.defaultTenantName,
+    timezone: env.defaultTenantTimezone,
+    apiKey: env.defaultApiKey
+  });
+
+  startEditionScheduler();
+
+  const app = buildApp();
+
+  serve(
+    {
+      fetch: app.fetch,
+      port: env.port
+    },
+    (info) => {
+      console.log(`Puzzlebox API listening on http://localhost:${info.port}`);
+    }
+  );
+}
+
+boot().catch((error) => {
+  console.error('failed_to_boot_api', error);
+  process.exit(1);
 });
-
-startEditionScheduler();
-
-const app = buildApp();
-
-serve(
-  {
-    fetch: app.fetch,
-    port: env.port
-  },
-  (info) => {
-    console.log(`Puzzlebox API listening on http://localhost:${info.port}`);
-  }
-);

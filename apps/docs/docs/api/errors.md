@@ -35,8 +35,12 @@ Validation failures include structured issues:
 | `game_slug_exists` | Duplicate game slug inside the tenant |
 | `edition_exists` | Duplicate `(game, edition_date)` edition |
 | `round_count_mismatch` | Edition round count does not match game config |
+| `invalid_correct_answer` | Round `correct_answer` shape does not match mode/options |
+| `invalid_order` | Ordered-sequence answer does not include a valid full ordering |
 | `session_exists` | Player already started that edition |
 | `edition_not_playable` | Tried to start a session for a non-active edition |
+| `session_incomplete` | Tried to complete before answering every round |
+| `session_completed` | Tried to respond after session completion |
 | `playtest_capacity_reached` | Playtest game reached the unique-player cap |
 
 ## HTTP Status Guidance

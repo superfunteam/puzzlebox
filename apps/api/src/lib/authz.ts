@@ -2,14 +2,14 @@ import { verifyJwt } from './jwt';
 import { getEnv } from './env';
 import { store } from './store';
 
-export function requireAdmin(c: any): { ok: true } | { ok: false; response: Response } {
+export async function requireAdmin(c: any): Promise<{ ok: true } | { ok: false; response: Response }> {
   const tenant = c.get('tenant');
   const apiKey = c.req.header('X-API-Key');
   if (!apiKey) {
     return { ok: false, response: c.json({ error: 'missing_api_key' }, 401) };
   }
 
-  const record = store.validateApiKey(tenant.id, apiKey);
+  const record = await store.validateApiKey(tenant.id, apiKey);
   if (!record) {
     return { ok: false, response: c.json({ error: 'invalid_api_key' }, 403) };
   }

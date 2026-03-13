@@ -1,17 +1,22 @@
 # Quickstart
 
-This walkthrough gets you from a blank local repo to one working daily edition.
+This walkthrough gets you from a blank clone to one working daily edition.
 
 If you are handing the repo to a new agent, start with [/agent-quickstart](/agent-quickstart) first.
+
+> Storage behavior: if `DATABASE_URL` is set, Puzzlebox uses `postgres` and persists data. Without `DATABASE_URL`, it uses `memory` and API restart resets data.
 
 ## 1. Boot The Repo
 
 ```bash
 cp .env.example .env
 npm install
+npm run db:push
 npm run build
 npm run start -w @puzzlebox/api
 ```
+
+If you want a throwaway in-memory run, set `STORAGE_BACKEND=memory` in `.env` and skip the DB migration commands.
 
 Useful local URLs:
 
@@ -127,6 +132,8 @@ curl -X POST http://localhost:3000/api/v1/auth/anonymous \
   -d '{"timezone":"America/New_York"}'
 ```
 
+Save `jwt` from the response as `JWT`.
+
 2. Fetch the bootstrap payload.
 
 ```bash
@@ -145,6 +152,8 @@ curl -X POST http://localhost:3000/api/v1/sessions \
   -d '{"edition_id":"<edition id>"}'
 ```
 
+If this returns `409` with `session_exists`, resume the provided `existing_session`.
+
 4. Respond per round.
 
 ```bash
@@ -161,6 +170,16 @@ curl -X POST http://localhost:3000/api/v1/sessions/<session id>/respond \
 curl -X POST http://localhost:3000/api/v1/sessions/<session id>/complete \
   -H 'X-Tenant: demo' \
   -H "Authorization: Bearer $JWT"
+```
+
+If not all rounds have responses yet, completion returns:
+
+```json
+{
+  "error": "session_incomplete",
+  "answered_rounds": 3,
+  "total_rounds": 5
+}
 ```
 
 ## 5. Use The SDK Instead Of Raw Fetch In Frontends
@@ -189,9 +208,12 @@ const complete = await client.completeSession(sessionId);
 console.log(complete.share_data.share_text);
 ```
 
+The SDK throws `PuzzleboxApiError` for `session_exists`, `session_incomplete`, and other typed error payloads.
+
 ## 6. What To Read Next
 
 - [/agent-quickstart](/agent-quickstart)
 - [/game-spec-template](/game-spec-template)
+- [/storage](/storage)
 - [/sdk](/sdk)
 - [/api/overview](/api/overview)

@@ -4,19 +4,30 @@
   "private": true,
   "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "lint": "echo 'lint skipped for @puzzlebox/db'"
+    "lint": "echo 'lint skipped for @puzzlebox/db'",
+    "db:generate": "npm run build && drizzle-kit generate",
+    "db:push": "npm run build && drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm": "^0.36.4",
+    "drizzle-orm": "^0.45.1",
     "pg": "^8.13.1"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.28.1",
+    "drizzle-kit": "^0.31.9",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

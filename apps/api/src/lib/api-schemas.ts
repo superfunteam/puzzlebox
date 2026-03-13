@@ -285,6 +285,20 @@ export const sessionExistsSchema = z
   })
   .openapi('SessionExistsError');
 
+export const sessionCompletedSchema = z
+  .object({
+    error: z.literal('session_completed')
+  })
+  .openapi('SessionCompletedError');
+
+export const sessionIncompleteSchema = z
+  .object({
+    error: z.literal('session_incomplete'),
+    answered_rounds: z.number().int().min(0),
+    total_rounds: z.number().int().min(0)
+  })
+  .openapi('SessionIncompleteError');
+
 export const playtestCapacitySchema = z
   .object({
     error: z.literal('playtest_capacity_reached'),

@@ -94,7 +94,12 @@ try {
 }
 ```
 
-This matters for agent-generated frontends because idempotent session creation is part of the expected runtime flow, not an edge case.
+This matters for agent-generated frontends because idempotent session creation is expected behavior, not an edge case.
+
+The same pattern applies to other workflow errors such as:
+
+- `session_incomplete` on early `completeSession`,
+- `session_completed` on late `respond`.
 
 ## Useful Methods
 

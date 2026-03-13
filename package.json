@@ -13,8 +13,12 @@
     "typecheck": "npm run typecheck -w @puzzlebox/shared && npm run typecheck -w @puzzlebox/sdk && npm run typecheck -w @puzzlebox/db && npm run typecheck -w @puzzlebox/api && npm run typecheck -w @puzzlebox/web && npm run typecheck -w @puzzlebox/sheets-sync && npm run typecheck -w @puzzlebox/docs",
     "test": "npm run -ws test",
     "lint": "npm run -ws lint",
-    "openapi:baseline": "npm run build -w @puzzlebox/shared && npm exec -w @puzzlebox/api tsx ../../scripts/generate-openapi-baseline.ts",
+    "openapi:baseline": "npm run build -w @puzzlebox/shared && npm run build -w @puzzlebox/db && npm exec -w @puzzlebox/api tsx ../../scripts/generate-openapi-baseline.ts",
     "timeline:render": "node scripts/render-master-log-timeline.mjs",
+    "db:generate": "npm run db:generate -w @puzzlebox/db",
+    "db:push": "npm run db:push -w @puzzlebox/db",
+    "db:studio": "npm run db:studio -w @puzzlebox/db",
+    "test:api:postgres": "bash scripts/test-api-postgres.sh",
     "docs:dev": "npm run dev -w @puzzlebox/docs",
     "docs:build": "npm run build -w @puzzlebox/docs",
     "docs:preview": "npm run preview -w @puzzlebox/docs"
@@ -24,6 +28,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "drizzle-kit": "^0.31.9",
+    "drizzle-orm": "^0.45.1",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

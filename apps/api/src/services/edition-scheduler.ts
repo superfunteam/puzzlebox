@@ -5,7 +5,7 @@ let timer: NodeJS.Timeout | null = null;
 export function startEditionScheduler(intervalMs = 60_000) {
   if (timer) return;
   timer = setInterval(() => {
-    store.activatePendingEditions();
+    void store.activatePendingEditions();
   }, intervalMs);
 }
 

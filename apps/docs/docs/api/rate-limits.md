@@ -6,10 +6,9 @@ Puzzlebox applies endpoint-tier rate limits to protect gameplay integrity and re
 
 | Category | Limit | Key |
 |---|---|---|
-| General authenticated API | 100 req/min | Player ID |
-| Gameplay responses | 30 req/min | Player ID |
-| Read-heavy endpoints | 200 req/min | Player ID |
-| Login/signup endpoints | 10 req/15 min | IP |
+| `POST /auth/magic-link`, `POST /auth/verify`, `POST /auth/anonymous` | 10 req / 15 min | IP fallback (`x-forwarded-for`) |
+| `POST /sessions/{id}/respond` | 30 req / min | Player ID or IP fallback |
+| `GET /games`, `GET /players` | 200 req / min | Player ID or IP fallback |
 
 ## Response headers
 

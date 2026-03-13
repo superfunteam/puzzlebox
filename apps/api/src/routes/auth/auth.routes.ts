@@ -2,10 +2,8 @@ import { createRoute, z } from '@hono/zod-openapi';
 import type { OpenAPIHono } from '@hono/zod-openapi';
 import { authHandlers } from './auth.handlers';
 import { loginRateLimitMiddleware } from '../../middleware/rate-limit';
-import { tenantMiddleware } from '../../middleware/tenant';
 
 export function registerAuthRoutes(app: OpenAPIHono<any>) {
-  app.use('/api/v1/auth/*', tenantMiddleware);
   app.use('/api/v1/auth/magic-link', loginRateLimitMiddleware);
   app.use('/api/v1/auth/verify', loginRateLimitMiddleware);
   app.use('/api/v1/auth/anonymous', loginRateLimitMiddleware);
@@ -83,8 +81,7 @@ export function registerAuthRoutes(app: OpenAPIHono<any>) {
             'application/json': {
               schema: z
                 .object({
-                  timezone: z.string().optional(),
-                  device_fingerprint: z.string().optional()
+                  timezone: z.string().optional()
                 })
                 .optional()
             }
@@ -174,45 +171,4 @@ export function registerAuthRoutes(app: OpenAPIHono<any>) {
     authHandlers.external
   );
 
-  app.openapi(
-    createRoute({
-      method: 'get',
-      path: '/api/v1/auth/oauth/{provider}/start',
-      request: {
-        params: z.object({ provider: z.string().min(1) })
-      },
-      responses: {
-        501: {
-          description: 'OAuth start not enabled in baseline',
-          content: {
-            'application/json': {
-              schema: z.object({ provider: z.string(), message: z.string() })
-            }
-          }
-        }
-      }
-    }),
-    authHandlers.oauthStart
-  );
-
-  app.openapi(
-    createRoute({
-      method: 'get',
-      path: '/api/v1/auth/oauth/{provider}/callback',
-      request: {
-        params: z.object({ provider: z.string().min(1) })
-      },
-      responses: {
-        501: {
-          description: 'OAuth callback not enabled in baseline',
-          content: {
-            'application/json': {
-              schema: z.object({ provider: z.string(), message: z.string() })
-            }
-          }
-        }
-      }
-    }),
-    authHandlers.oauthCallback
-  );
 }

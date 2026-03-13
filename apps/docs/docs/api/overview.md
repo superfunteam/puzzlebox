@@ -10,6 +10,7 @@ Base URL: `/api/v1`
 - Gameplay routes use player bearer tokens.
 - Errors always include an `error` string.
 - The generated OpenAPI document lives at `GET /doc`.
+- Storage backend is `memory` or `postgres`; contract behavior is identical across both.
 
 ## Object Graph
 
@@ -33,6 +34,11 @@ The intended frontend flow is:
 3. Otherwise `POST /sessions`
 4. `POST /sessions/{id}/respond` per round
 5. `POST /sessions/{id}/complete`
+
+Guardrail responses:
+
+- `POST /sessions/{id}/respond` can return `session_completed` after completion.
+- `POST /sessions/{id}/complete` can return `session_incomplete` until all rounds are answered.
 
 ## Why Agents Should Care
 

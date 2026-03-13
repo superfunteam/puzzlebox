@@ -38,4 +38,6 @@ Daily activity is calculated using the tenant’s timezone, not raw UTC boundari
 
 ## Agent Guidance
 
-If you are building a launch MVP, analytics should usually be read-only. Agents should consume these endpoints before inventing custom reporting tables or ad hoc aggregate queries.
+If you are building an MVP, analytics should usually be read-only. Consume these endpoints before inventing custom reporting tables.
+
+Current baseline metrics are intentionally lightweight and derived from runtime session/response data.

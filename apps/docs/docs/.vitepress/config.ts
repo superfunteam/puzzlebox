@@ -4,13 +4,15 @@ export default defineConfig({
   title: 'Puzzlebox Docs',
   description: 'Agent-first game backend for daily-play newsroom games',
   cleanUrls: true,
+  appearance: false,
   themeConfig: {
     logo: '/logo-block.svg',
-    siteTitle: 'PuzzleBox',
+    siteTitle: 'Puzzlebox',
     nav: [
       { text: 'Agent Quickstart', link: '/agent-quickstart' },
       { text: 'Game Spec', link: '/game-spec-template' },
       { text: 'Quickstart', link: '/quickstart' },
+      { text: 'Storage', link: '/storage' },
       { text: 'API', link: '/api/overview' },
       { text: 'SDK', link: '/sdk' }
     ],
@@ -22,6 +24,7 @@ export default defineConfig({
           { text: 'Agent Quickstart', link: '/agent-quickstart' },
           { text: 'Game Spec Template', link: '/game-spec-template' },
           { text: 'Quickstart', link: '/quickstart' },
+          { text: 'Storage', link: '/storage' },
           { text: 'Architecture', link: '/architecture' },
           { text: 'SDK', link: '/sdk' }
         ]

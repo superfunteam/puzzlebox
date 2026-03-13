@@ -1,4 +1,6 @@
 import { date, jsonb, pgEnum, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { games } from './games.js';
+import { tenants } from './tenants.js';
 
 export const editionStatusEnum = pgEnum('edition_status', ['draft', 'scheduled', 'active', 'archived']);
 
@@ -6,8 +8,12 @@ export const editions = pgTable(
   'editions',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    gameId: uuid('game_id').notNull(),
-    tenantId: uuid('tenant_id').notNull(),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
     editionDate: date('edition_date').notNull(),
     status: editionStatusEnum('status').notNull().default('draft'),
     publishAt: timestamp('publish_at', { withTimezone: true }),

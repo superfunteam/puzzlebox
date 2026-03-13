@@ -26,7 +26,10 @@ An edition is one day’s playable content for one game. Rounds are the ordered 
 - Round count must match `game.config.rounds_per_edition`.
 - `survey` rounds must not include `correct_answer`.
 - Non-survey rounds must include `correct_answer`.
+- `pick_one` `correct_answer.key` must exist in round options.
+- `ordered_sequence` `correct_answer.order` must include every option key exactly once.
 - Duplicate edition dates for the same game are rejected.
+- Round patches are only allowed while the parent edition is `draft`.
 
 ## Response Shape
 

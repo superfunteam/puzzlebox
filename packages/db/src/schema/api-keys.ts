@@ -1,8 +1,11 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { tenants } from './tenants.js';
 
 export const apiKeys = pgTable('api_keys', {
   id: uuid('id').defaultRandom().primaryKey(),
-  tenantId: uuid('tenant_id').notNull(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id, { onDelete: 'cascade' }),
   keyHash: text('key_hash').notNull(),
   label: text('label').notNull(),
   scopes: text('scopes').array().notNull().default([]),

@@ -1,98 +1,70 @@
 # Agent Quickstart
 
-If you only hand a new coding agent two docs, hand it this page and [/game-spec-template](/game-spec-template).
+If you hand a new coding agent only two docs, hand this page and [/game-spec-template](/game-spec-template).
 
-## What Puzzlebox Is
+## What Puzzlebox Already Gives You
 
-Puzzlebox is the reusable backend layer for daily-play games. It already knows how to:
+- tenant-scoped requests,
+- game/edition/round/session primitives,
+- server-side answer validation by mode,
+- idempotent session start and resume payloads,
+- streak + share payloads at completion,
+- analytics endpoints,
+- TypeScript SDK aligned to OpenAPI.
 
-- scope every request to a tenant,
-- define a game and its runtime policy,
-- publish daily editions made of ordered rounds,
-- validate answers server-side,
-- resume or reject duplicate sessions,
-- calculate streaks and share payloads,
-- expose analytics for games and editions.
+Do not add new primitives until the game clearly cannot fit `pick_one`, `ordered_sequence`, or `survey`.
 
-Do not invent new backend entities until you have proven that the game idea does not fit the existing model.
-
-## External API Rules
+## Runtime Rules (Do Not Violate)
 
 - External JSON is `snake_case`.
-- Tenant context is always the `X-Tenant` header.
-- Admin routes use `X-API-Key`.
-- Gameplay routes use a player bearer token.
-- `GET /games/{slug}/today` is the frontend bootstrap request.
-- Sessions are one attempt per player per edition.
-- `POST /sessions` can return `session_exists` with a full resumable session payload.
-- Sessions can only start for `active` editions.
+- Tenant context is always `X-Tenant`.
+- Admin routes require `X-API-Key`.
+- Gameplay routes require a player bearer token.
+- Frontend bootstraps from `GET /api/v1/games/{slug}/today`.
+- `POST /api/v1/sessions` may return `session_exists`; resume instead of failing.
+- `POST /api/v1/sessions/{id}/respond` returns `session_completed` when already finalized.
+- `POST /api/v1/sessions/{id}/complete` returns `session_incomplete` until every round has a response.
+- `ordered_sequence` answers must contain every option key exactly once.
+- Storage backend is explicit per environment: `memory` for local throwaway loops, `postgres` for durable environments.
 
-## Puzzlebox Object Model
+## Object Model
 
-### Tenant
+```text
+Tenant -> Game -> Edition -> Round
+Player -> Session -> Response
+```
 
-One newsroom or publisher deployment. Tenancy is a runtime boundary, not a UI concept.
-
-### Game
-
-Defines the stable rules of a title:
-
-- `mode`
-- `lifecycle`
-- `config`
-
-This should change rarely.
-
-### Edition
-
-One day’s playable content for one game on one date.
-
-### Round
-
-One prompt inside an edition. Rounds are ordered and validated on the server.
-
-### Session
-
-One player’s attempt at one edition. Responses are attached to the session and are idempotent per round.
-
-## Pick The Right Mode
+## Mode Selection
 
 | Game idea | Mode | Notes |
 |---|---|---|
-| Trivia, quote matching, geography pickers | `pick_one` | One point per round. Best default when answers are discrete. |
-| Timelines, ranking, chronology, ordering | `ordered_sequence` | Partial credit is built in. Max score comes from the number of positions when partial credit is enabled. |
-| Polls, “what do you call this?”, audience preference | `survey` | No correct answer. The response returns crowd distribution. |
+| Trivia, quote match, location pick | `pick_one` | One point for correct answer |
+| Timeline, ranking, chronology | `ordered_sequence` | Supports partial credit per position |
+| Opinion/poll/crowd language | `survey` | No correct answer, returns distribution |
 
 ## Minimum Build Workflow
 
-1. Turn the game idea into the spec on [/game-spec-template](/game-spec-template).
-2. Create the game and one working edition first.
-3. Build the frontend around `GET /games/{slug}/today`, `POST /sessions`, `POST /respond`, and `POST /complete`.
-4. Verify session resume and refresh behavior.
-5. Add one happy-path test covering create game -> create edition -> play -> complete.
-6. Leave concise docs for the next agent.
+1. Fill [/game-spec-template](/game-spec-template).
+2. Create game + one edition for today.
+3. Build frontend loop:
+   - `GET /api/v1/games/{slug}/today`
+   - `POST /api/v1/sessions`
+   - `POST /api/v1/sessions/{id}/respond`
+   - `POST /api/v1/sessions/{id}/complete`
+4. Confirm refresh resumes in-progress sessions.
+5. Add one integration test covering create game -> create edition -> play -> complete.
+6. Leave short docs for the next agent.
 
 ## Definition Of Done
 
-- The game can be created through the API or SDK.
-- A real edition payload exists for today.
-- The frontend plays through a complete session.
-- Refreshing the page resumes an in-progress session instead of failing.
-- The final screen uses `share_data`.
-- Tests cover the primary loop.
-- Docs explain how to add the next edition and where content lives.
+- Game setup is scriptable via API or SDK.
+- Today has a real `active` edition payload.
+- Frontend completes a full session and renders `share_data`.
+- Resume path works on refresh and duplicate start attempts.
+- Tests cover happy path plus one guardrail case.
+- Next-edition publishing flow is documented.
 
-## Recommended Worktree Split
-
-If you want multiple agents in parallel, split by vertical surface, not by arbitrary files:
-
-1. Agent A: admin/content flow and API tests.
-2. Agent B: playable frontend and session resume UX.
-3. Agent C: docs, examples, and landing-page explanation.
-
-Keep each worktree responsible for one coherent slice.
-
-## Copy-Paste Prompt
+## Copy/Paste Prompt
 
 ```text
 Use Puzzlebox primitives unless the current framework clearly cannot express the game.
@@ -101,8 +73,9 @@ Before coding, read:
 1. /agent-quickstart
 2. /game-spec-template
 3. /quickstart
-4. /sdk
-5. /api/overview
+4. /storage
+5. /sdk
+6. /api/overview
 
 Goal: build a working daily game from the spec below.
 
@@ -116,7 +89,8 @@ Constraints:
 - keep the external API contract in snake_case,
 - prefer the SDK for client code,
 - support session resume,
-- do not create new backend primitives if `pick_one`, `ordered_sequence`, or `survey` already fits.
+- do not create new backend primitives if `pick_one`, `ordered_sequence`, or `survey` already fits,
+- call out the intended storage backend (`memory` for throwaway local tests, `postgres` for durable state).
 ```
 
 ## Example Handoffs In This Repo
