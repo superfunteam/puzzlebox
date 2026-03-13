@@ -1,7 +1,8 @@
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: './src/schema/index.ts',
+  // Keep drizzle-kit on compiled ESM output to avoid TS/CJS loader edge cases.
+  schema: './dist/schema/index.js',
   out: './migrations',
   dialect: 'postgresql',
   dbCredentials: {
