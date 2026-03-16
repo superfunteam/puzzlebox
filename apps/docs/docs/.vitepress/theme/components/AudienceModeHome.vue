@@ -168,14 +168,18 @@ const copy = computed(() => content[audience.value]);
 </script>
 
 <template>
-  <!-- Hero: ASCII mark + headline -->
-  <section class="pb-hero-text">
-    <HeroMarkTyping />
-    <h1 class="pb-headline">{{ copy.headline }}</h1>
-    <p class="pb-subheadline">{{ copy.subheadline }}</p>
-    <div class="pb-actions">
-      <a :href="copy.primaryCta.href" class="pb-btn pb-btn-primary">{{ copy.primaryCta.text }}</a>
-      <a :href="copy.secondaryCta.href" class="pb-btn pb-btn-secondary">{{ copy.secondaryCta.text }}</a>
+  <!-- Hero: side-by-side copy + terminal -->
+  <section class="pb-hero">
+    <div class="pb-hero-copy">
+      <h1 class="pb-headline">{{ copy.headline }}</h1>
+      <p class="pb-subheadline">{{ copy.subheadline }}</p>
+      <div class="pb-actions">
+        <a :href="copy.primaryCta.href" class="pb-btn pb-btn-primary">{{ copy.primaryCta.text }}</a>
+        <a :href="copy.secondaryCta.href" class="pb-btn pb-btn-secondary">{{ copy.secondaryCta.text }}</a>
+      </div>
+    </div>
+    <div class="pb-hero-terminal">
+      <HeroMarkTyping />
     </div>
   </section>
 
